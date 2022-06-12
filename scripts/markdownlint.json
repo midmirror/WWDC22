@@ -1,0 +1,9 @@
+{
+    "MD004": { "style": "consistent" },
+    "MD013": false,
+    "MD033": false,
+    "MD036": false,
+    "MD040": false,
+    "MD045": false,
+    "MD046": { "style": "consistent" }
+}

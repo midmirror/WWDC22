@@ -1,0 +1,10 @@
+{
+    "excludeFiles": [],
+    "rules": {
+      "no-long-code": [
+        2,
+        { "length": 1024 }
+      ],
+      "no-empty-code-lang": 0
+    }
+}

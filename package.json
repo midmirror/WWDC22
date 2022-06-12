@@ -1,0 +1,20 @@
+{
+  "name": "MarkdownLInterDemo",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "@lint-md/cli": "^0.1.8",
+    "@lint-md/core": "^0.2.2",
+    "chalk": "^5.0.1",
+    "glob": "^8.0.3",
+    "markdownlint": "^0.25.1",
+    "markdownlint-cli": "^0.31.1",
+    "hexo-front-matter": "^3.0.0"
+  },
+  "scripts": {
+    "lint": "node scripts/lint.js",
+    "fix": "yarn markdownlint -f -q -c scripts/markdownlint.json '{,!(node_modules)/**/}*.md' || yarn lint-md -f '{,!(node_modules)/**/}*.md' -c scripts/documentlint.json"
+  }
+}

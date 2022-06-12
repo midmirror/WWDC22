@@ -1,0 +1,52 @@
+name: Comment Notification
+
+on:
+  pull_request_review_comment:
+    types: [created]
+  issue_comment:
+    types: [created]
+
+concurrency: 
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+
+permissions:
+  actions: write
+  checks: write
+  contents: write
+  # deployments: read
+  issues: write
+  pull-requests: write
+  statuses: write
+
+env:
+  PULL_REQUEST_URL: ${{ github.event.pull_request.html_url || github.event.issue.pull_request.html_url }}
+  DANGER_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  notify:
+    runs-on: self-hosted
+    if: ${{ github.event.comment.body != 'fix format' }}
+    steps:
+    - run: cat $GITHUB_EVENT_PATH
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Install Ruby Gem dependencies
+      run: bundle
+    - name: Target Branch Lookup
+      run: echo "::set-output name=TARGET_REF::$(ruby scripts/ci_comment_branch_lookup.rb)"
+      id: target_branch_lookup
+    - name: Checkout to branch where the comment happend
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ steps.target_branch_lookup.outputs.TARGET_REF }}
+        fetch-depth: 0
+    - name: Install Ruby Gem dependencies
+      run: bundle
+    - name: Install Node.js dependencies
+      run: yarn
+    - name: Comment Notification
+      run: ruby scripts/ci_comment_notification.rb
+      env:
+        PULL_REQUEST_AUTHOR: ${{ github.event.pull_request.user.login }}
+        COMMENT_SENDER: ${{ github.event.sender.login }}
