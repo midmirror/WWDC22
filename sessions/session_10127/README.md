@@ -10,11 +10,9 @@ session_ids: [10127]
 
 > **注：因为文章撰写时，RoomPlan 还处于 Beta 软件阶段，我们将根据最终的 API 更新一些内容**
 
+相信今年 WWDC 召开之前，很多朋友的预测就是 RealityOS 将“千呼万唤始出来”，可惜无论是关于增强现实、混合现实（下统一称 AR/MR ）新的操作系统还是新的硬件都没有任何影子，而且更令人感到奇怪的是，2022 年 WWDC 中关于 AR/MR 的相关技术更新特别少，甚至第一天的 Keynote 中都没有任何相关的技术展示，给人一种“此地无银三百两”的感觉。不管怎么说这都是作者的个人猜测，虽说今年 AR/MR 技术没有太多更新，但还是有一个新框架得到了大家热烈讨论、试用、夸赞，也就是今天的主角—— RoomPlan 。
 
-
-相信今年 WWDC 召开之前，很多朋友的预测就是 RealityOS 将“千呼万唤始出来”，可惜无论是关于增强现实、混合现实（下统一称 AR/MR ）新的操作系统还是新的硬件都没有任何影子，而且更令人感到奇怪的是，2022年 WWDC 中关于 AR/MR 的相关技术更新特别少，甚至第一天的 Keynote 中都没有任何相关的技术展示，给人一种“此地无银三百两”的感觉。不管怎么说这都是作者的个人猜测，虽说今年 AR/MR 技术没有太多更新，但还是有一个新框架得到了大家热烈讨论、试用、夸赞，也就是今天的主角—— RoomPlan 。
-
-本文将主要聚焦于 Apple 的 AR/MR 新 API：RoomPlan 。全文共分为3个部分，第一部分是 Apple 的 AR/MR 技术发展回顾，以及 RoomPlan 和 Object Capture 技术背后的原理简介。第二部分是对于 RoomPlan 技术的介绍，包括如何使用官方 API 快速在相关 App 中使用 RoomPlan，以及如何通过数据 API 自定义 RoomPlan 的使用。最后一部分是关于 AR/MR 应用设计的相关建议。
+本文将主要聚焦于 Apple 的 AR/MR 新 API：RoomPlan 。全文共分为 3 个部分，第一部分是 Apple 的 AR/MR 技术发展回顾，以及 RoomPlan 和 Object Capture 技术背后的原理简介。第二部分是对于 RoomPlan 技术的介绍，包括如何使用官方 API 快速在相关 App 中使用 RoomPlan，以及如何通过数据 API 自定义 RoomPlan 的使用。最后一部分是关于 AR/MR 应用设计的相关建议。
 
 > 阅读建议
 > 如果你是被 RoomPlan 吸引的 AR/MR 新手，建议全文阅读，并配合以往的小专栏文章进行学习；
@@ -29,13 +27,13 @@ session_ids: [10127]
 
 ## Apple 的 AR/MR 技术发展回顾
 
-Apple 关于AR/MR的布局最早可以追溯到 2014 年，在那一年 Apple 推出了**Metal Shading Language**，之后 2017 年首次推出 ARKit，2018 年推出了 3D 模型快速预览框架 AR Quick Look，2019 年推出基于 Metal 的渲染引擎 RealityKit，2021 年推出了三维模型建模技术 Object Capture 以及今年推出了参数化室内建模框架 RoomPlan 。可以看到，从最基本的相机姿态计算与跟踪技术到 3D 内容快速创作工具，从底层渲染技术到高级渲染框架，经过 8 年布局，Apple 现在已经为未来的产品做好了一切准备。
+Apple 关于 AR/MR 的布局最早可以追溯到 2014 年，在那一年 Apple 推出了**Metal Shading Language**，之后 2017 年首次推出 ARKit，2018 年推出了 3D 模型快速预览框架 AR Quick Look，2019 年推出基于 Metal 的渲染引擎 RealityKit，2021 年推出了三维模型建模技术 Object Capture 以及今年推出了参数化室内建模框架 RoomPlan 。可以看到，从最基本的相机姿态计算与跟踪技术到 3D 内容快速创作工具，从底层渲染技术到高级渲染框架，经过 8 年布局，Apple 现在已经为未来的产品做好了一切准备。
 
 <img src="./images/pic1.png" alt="pic1" style="zoom:50%;" />
 
 今天的主角—— RoomPlan ，虽然它并不是一个开源的框架，但根据官方的介绍我们能对其背后的原理进行一些简单的介绍。
 
-1. 首先 RoomPlan 必须运行在配备 LiDAR 的设备上（无论是 iPhone 或是 iPad ）。我们知道，传统的相机拍摄得到的图像相比我们人眼睛看到的场景丢失了**深度**这个维度的信息，而 Apple 设备上配备的 LiDAR相机（ 实质上是 DToF 相机）能通过计算飞行时间快速得到深度信息，使得测量距离既准确又便捷。虽然说学术界有很多研究如何只通过图片去估计深度的信息，但是这样会产生大量的计算，增加处理器负担。预期未来如果 Apple 想让未配备 LiDAR 的设备也能运行 RoomPlan ，可以通过深度估计算法实现。（但是个人预测之后的设备都应该会标配 LiDAR ，而且本身 AR 就对处理器要求很高，增加不必要的计算量是不值得的）
+1. 首先 RoomPlan 必须运行在配备 LiDAR 的设备上（无论是 iPhone 或是 iPad ）。我们知道，传统的相机拍摄得到的图像相比我们人眼睛看到的场景丢失了**深度**这个维度的信息，而 Apple 设备上配备的 LiDAR 相机（ 实质上是 DToF 相机）能通过计算飞行时间快速得到深度信息，使得测量距离既准确又便捷。虽然说学术界有很多研究如何只通过图片去估计深度的信息，但是这样会产生大量的计算，增加处理器负担。预期未来如果 Apple 想让未配备 LiDAR 的设备也能运行 RoomPlan ，可以通过深度估计算法实现。（但是个人预测之后的设备都应该会标配 LiDAR ，而且本身 AR 就对处理器要求很高，增加不必要的计算量是不值得的）
 
 <img src="./images/pic2.png" alt="pic2" style="zoom:50%;" />
 
@@ -71,7 +69,7 @@ Apple 关于AR/MR的布局最早可以追溯到 2014 年，在那一年 Apple �
 
 读到这里，相信你一定对 Apple 的 AR/MR 有了一定了解，那么现在就让我们走近 RoomPlan 。
 
-RoomPlan 是 Apple **“把我们的周遭的世界带入App中”**计划的一员，这个计划还包括去年推出的 Object Capture 技术。Object Capture 让我们可以通过拍摄一组现实中物体的照片，然后运用计算摄影测量技术生成真实的 3D 模型，今年的 RoomPlan 则让大家使用配备 LiDAR 的设备，去扫描得到室内场景的 3D 模型，模型既反映了房间大小，同样还包含一些框架内可以识别的家具（以大小不一的包围盒代替）。整个过程使用到了 ARKit 中的机器学习算法能力、渲染过程使用的是 RealityKit 框架，最后输出的是 USD 或 USDZ 模型。
+RoomPlan 是 Apple **“把我们的周遭的世界带入 App 中”**计划的一员，这个计划还包括去年推出的 Object Capture 技术。Object Capture 让我们可以通过拍摄一组现实中物体的照片，然后运用计算摄影测量技术生成真实的 3D 模型，今年的 RoomPlan 则让大家使用配备 LiDAR 的设备，去扫描得到室内场景的 3D 模型，模型既反映了房间大小，同样还包含一些框架内可以识别的家具（以大小不一的包围盒代替）。整个过程使用到了 ARKit 中的机器学习算法能力、渲染过程使用的是 RealityKit 框架，最后输出的是 USD 或 USDZ 模型。
 
 <img src="./images/pic5.png" alt="pic5" style="zoom:50%;" />
 
@@ -113,7 +111,7 @@ class RoomCaptureViewController: UIViewController{
 
 ```
 
-或者，我们也可以通过遵循 RoomCaptureViewDelegate 协议，并选择扫描结束后是否要进行后期优化处理，以及选择最终如何呈现处理后的扫描模型。比如我们可以使用CapturedRoom数据结构中的导出函数来导出USDZ模型。
+或者，我们也可以通过遵循 RoomCaptureViewDelegate 协议，并选择扫描结束后是否要进行后期优化处理，以及选择最终如何呈现处理后的扫描模型。比如我们可以使用 CapturedRoom 数据结构中的导出函数来导出 USDZ 模型。
 
 ```swift
 class RoomCaptureViewController: UIViewController, RoomCaptureViewDelegate{
@@ -136,7 +134,7 @@ class RoomCaptureViewController: UIViewController, RoomCaptureViewDelegate{
 
 在这里与大家分享部分来自 Digital Lounge 的一些开发者提问与 Apple 工程师官方回复，希望解决大家可能存在的相同疑问：
 
-1. 默认的 RoomCaptureView 无法根据扫描到的物体标签进行部分现实，如果想实现这个功能需要自己利用数据API实现；
+1. 默认的 RoomCaptureView 无法根据扫描到的物体标签进行部分现实，如果想实现这个功能需要自己利用数据 API 实现；
 
 > Q: Would it be possible to choose which components to display from RoomCaptureView and adjust location and sizing on screen?
 >
@@ -181,13 +179,13 @@ class AnotherRoomCaptureViewController: UIViewController{
 
 ```
 
-另外如果想获得实时更新，只需要将我们定义的 `UIViewController` 作为`captureSession`的委托。那么通过不同`captureSession`方法就可以实时处理RoomCaptureSession中的数据，比如
+另外如果想获得实时更新，只需要将我们定义的 `UIViewController` 作为`captureSession`的委托。那么通过不同`captureSession`方法就可以实时处理 RoomCaptureSession 中的数据，比如
 
 - `captureSession(_:didStartWith:)` 当配置好的扫描开始运行时被调用
 - `captureSession(_:didAdd:)` 当新扫描得到的模型（包括平面与物体）时被调用；
 - `captureSession(_:didChange:)` 扫描的模型中有物体或平面发生了维度、平移等变化时被调用；
-- `captureSession(_ session: didUpdate:) ` 扫描得到的模型（包括平面与物体）有快照或整体更新时被调用（见下方示例代码）；
-- `captureSession(_ session: didProvide:) ` 有用户的引导需要被显示时被调用（见下方示例代码）；
+- `captureSession(_ session: didUpdate:)` 扫描得到的模型（包括平面与物体）有快照或整体更新时被调用（见下方示例代码）；
+- `captureSession(_ session: didProvide:)` 有用户的引导需要被显示时被调用（见下方示例代码）；
 - `captureSession(_:didRemove:)` 有历史扫描得到的平面或物体被移除时被调用；
 - `captureSession(_:didEndWith:error:)` 因为在模型处理阶段时会用到，必须实现（见下一节示例代码）
 
@@ -223,7 +221,7 @@ class AnotherRoomCaptureViewController: UIViewController, RoomCaptureSessionDele
 
 #### b. 处理阶段
 
-扫描得到的模型构建是由 RoomBuilder 负责。要处理扫描得到的数据，需要首先实例化 RoomBuilder ，另外，需要实现 `captureSession(_:didEndWith:error:)` 函数来处理最终扫描得到的数据或处理可能出现的错误，其中处理模型数据是一个非常耗时的过程，所以我们需要异步去执行这一步操作以免阻塞主进程，导致用户界面无法刷新，示例代码中使用到了 2021年 WWDC 推出的最新 `async/wait` 语法，相关技术细节可以在去年的小专栏里找到学习。
+扫描得到的模型构建是由 RoomBuilder 负责。要处理扫描得到的数据，需要首先实例化 RoomBuilder ，另外，需要实现 `captureSession(_:didEndWith:error:)` 函数来处理最终扫描得到的数据或处理可能出现的错误，其中处理模型数据是一个非常耗时的过程，所以我们需要异步去执行这一步操作以免阻塞主进程，导致用户界面无法刷新，示例代码中使用到了 2021 年 WWDC 推出的最新 `async/wait` 语法，相关技术细节可以在去年的小专栏里找到学习。
 
 ```swift
 class AnotherRoomCaptureViewController: UIViewController, RoomCaptureSessionDelegate{
@@ -264,7 +262,7 @@ class AnotherRoomCaptureViewController: UIViewController, RoomCaptureSessionDele
 >
 > Apple: We enable sceneDepth in underlying arsession in roomCaptureSession. Therefore yes, you could also access it via `roomCaptureSession.arSession`.
 
-3. 目前的RoomPlan生成的模型有尺寸问题，这是一个已知问题，将在之后的版本被修复；
+3. 目前的 RoomPlan 生成的模型有尺寸问题，这是一个已知问题，将在之后的版本被修复；
 
 > Q: Currently the exported model comes out to be very very small in real world scale, is this a bug?
 >
@@ -272,13 +270,13 @@ class AnotherRoomCaptureViewController: UIViewController, RoomCaptureSessionDele
 
 4. 目前的 RoomPlan 不能生成 ARAnchor ，也无法保留扫描过程中使用的图像数据；
 
-> Q: Is it possible to use a room plan as an anchor for future AR sessions? 
+> Q: Is it possible to use a room plan as an anchor for future AR sessions?
 >
-> Apple: RoomPlan is not an ARAnchor in current design. 
+> Apple: RoomPlan is not an ARAnchor in current design.
 
 #### c. 导出阶段
 
-我们先来了解一下CapturedRoom的数据结构，以便在开发期间获取我们需要的数据。
+我们先来了解一下 CapturedRoom 的数据结构，以便在开发期间获取我们需要的数据。
 
 <img src="./images/pic7.png" alt="pic7" style="zoom:50%;" />
 
@@ -298,16 +296,16 @@ class AnotherRoomCaptureViewController: UIViewController, RoomCaptureSessionDele
 
   - 尺寸；
   - 置信度，表面或物体都有三个置信度级别；
-  -  3D变换矩阵；
+  - 3D 变换矩阵；
   - 以及唯一标识符；
 
 最后得到的 USD 或者 USDZ 模型既可以直接利用 RealityKit 渲染，执行之后的业务逻辑，也可以导出到专业的建模软件（例如 Cinema 4D，Maya ，Blender 等）进行处理。
 
 ## 使用 RoomPlan  以及 AR/MR 应用设计实践建议
 
-至此，相信你已经了解了 RoomPlan 的底层 API ，下面结合我自己的开发经历和今年的Session，和大家分享一些实用的构建 AR 应用的技巧。
+至此，相信你已经了解了 RoomPlan 的底层 API ，下面结合我自己的开发经历和今年的 Session，和大家分享一些实用的构建 AR 应用的技巧。
 
-### 1. 什么场景时应考虑使用增强现实技术？
+### 1. 什么场景时应考虑使用增强现实技术
 
 增强现实（或者说混合现实）技术将虚拟物体与现实世界融合在一起，使人身临其境，带给人们魔法一般的奇妙体验，常见的使用场景有：
 
@@ -317,7 +315,7 @@ b. 以最快的方式影响我们周遭的环境。比如我想挑选不同颜�
 
 c. 以最简单的方式创建可视化虚拟模型体验。在一些电子商务场景中，通过增强现实技术可以快速让顾客体验自己的商品，以打造特别的体验；
 
-### 2. 在使用增强现实技术时候需要注意哪些事情？
+### 2. 在使用增强现实技术时候需要注意哪些事情
 
 最重要的三句话，需要我们所有 AR 开发者铭记于心：
 
@@ -349,12 +347,12 @@ c. 因为人们对于现实世界非常熟悉，所以虚拟物体只要在任�
 
 <img src="./images/pic13.png" alt="pic13" style="zoom:50%;" />
 
-### 3. RoomPlan 的最佳实践建议有哪些？
+### 3. RoomPlan 的最佳实践建议有哪些
 
 说完了构建 AR 应用的最佳实践技巧，下面来分享一下使用 RoomPlan 需要注意的事项。
 
-a. RoomPlan 是针对室内扫描的框架，Apple 官方推荐一次扫描范围不超过 81 平方米的房间，出于对电池以及扫描闭合鲁棒性考虑，建议一次扫描不要超过 5分钟。另外Apple 官方不推荐大家用其进行室外扫描；
+a. RoomPlan 是针对室内扫描的框架，Apple 官方推荐一次扫描范围不超过 81 平方米的房间，出于对电池以及扫描闭合鲁棒性考虑，建议一次扫描不要超过 5 分钟。另外 Apple 官方不推荐大家用其进行室外扫描；
 
-b. 光照条件会很大程度上影响 RoomPlan 的重建效果，建议大家在扫描前打开窗帘等遮光物件，保证室内场景至少有50勒克斯亮度，避免在黑暗情况下进行扫描；
+b. 光照条件会很大程度上影响 RoomPlan 的重建效果，建议大家在扫描前打开窗帘等遮光物件，保证室内场景至少有 50 勒克斯亮度，避免在黑暗情况下进行扫描；
 
 c. 可以通过一些室内布置让扫描结果更精确，比如避免在有大量弱纹理（比如镜子、纯白墙等）的房间扫描；关闭房门以免扫描到一些不需要的区域；不要在同一个区域进行重复等。
