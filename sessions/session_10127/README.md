@@ -35,7 +35,7 @@ Apple 关于 AR/MR 的布局最早可以追溯到 2014 年，在那一年 Apple 
 
 1. 首先 RoomPlan 必须运行在配备 LiDAR 的设备上（无论是 iPhone 或是 iPad ）。我们知道，传统的相机拍摄得到的图像相比我们人眼睛看到的场景丢失了**深度**这个维度的信息，而 Apple 设备上配备的 LiDAR 相机（ 实质上是 DToF 相机）能通过计算飞行时间快速得到深度信息，使得测量距离既准确又便捷。虽然说学术界有很多研究如何只通过图片去估计深度的信息，但是这样会产生大量的计算，增加处理器负担。预期未来如果 Apple 想让未配备 LiDAR 的设备也能运行 RoomPlan ，可以通过深度估计算法实现。（但是个人预测之后的设备都应该会标配 LiDAR ，而且本身 AR 就对处理器要求很高，增加不必要的计算量是不值得的）
 
-<img src="./images/pic2.png" alt="pic2" style="zoom:50%;" />
+   <img src="./images/pic2.png" alt="pic2" style="zoom:50%;" />
 
 2. RoomPlan 在扫描过程中能识别到一些很常见的屋内结构，比如窗户、地板、墙面等等，以及预设的家具，包括壁炉、沙发、椅子、桌子等等，并在之后导出的模型中有对应的家具种类标签。正如官方视频中提到的，整个扫描过程中运用到了相关的深度学习算法。简单剖析一下，其背后其实就是计算机视觉的核心问题——如何理解一张图片？人们一直想赋予机器人的视觉能力，这个一开始被认为非常简单的目标发展到现在仍然是研究的热点之一。总体来看，让计算机理解一张图片可以分为三个阶段：
 
@@ -45,15 +45,15 @@ Apple 关于 AR/MR 的布局最早可以追溯到 2014 年，在那一年 Apple 
 
    RoomPlan 在扫描过程中，对图像进行分析时，究竟是使用了室内场景语义分割还是只是室内场景目标检测，我们则无从得知了。
 
-   <img src="./images/pic3.png" alt="pic3" style="zoom:50%;" />
-
    > 相关论文阅读推荐
    >
    > [Object Detection in 20 Years: A Survey](https://arxiv.org/abs/1905.05055)
    >
    > [A survey of Object Classification and Detection based on 2D/3D data](https://arxiv.org/pdf/1905.12683.pdf)
    >
-   > [DeLay: Robust Spatial Layout Estimation for Cluttered Indoor Scenes](https://cvgl.stanford.edu/papers/delay-robust-spatial.pdf)
+   > [DeLay: Robust Spatial Layout Estimation for Cluttered Indoor Scenes](
+
+   <img src="./images/pic3.png" alt="pic3" style="zoom:50%;" />
 
 3. RoomPlan 是如何从一张张图片中得到三维的模型？这和去年的 Object Capture 原理有点类似。关于三维重建相关的技术，需要从最基础的多视图三维重建算法开始说起，即通过拍摄到的物体图像序列，对每一张图片进行特征点检测和特征点匹配，通过几何关系计算还原出物体的三维结构。今年的 RoomPlan 并没有重建出室内环境各种模型的纹理，而是使用包围盒（ Bounding Box ）来代替，我认为一方面是从性能考虑，在重建的同时恢复材质信息并烘焙到模型上会带来大量的计算量，即使有 M 系列芯片的支持也需要进行大量的优化，另一方面，近期在学术界火热的新技术：Neural Rendering 可以解决相关问题，Apple 可能是在蓄力，让我们拭目以待。
 
@@ -250,25 +250,25 @@ class AnotherRoomCaptureViewController: UIViewController, RoomCaptureSessionDele
 
 再次和大家分享部分来自 Digital Lounge 的一些开发者提问与 Apple 工程师官方回复，希望解决大家可能存在的相同疑问：
 
-1. Apple 官方工程师表示，标准的处理流程不会将纹理烘焙到最终的模型上，这个步骤目前只能由开发者自己想办法完成；
+a. Apple 官方工程师表示，标准的处理流程不会将纹理烘焙到最终的模型上，这个步骤目前只能由开发者自己想办法完成；
 
 > Q: Is there a recommended workflow for performing photogrammetry to capture textures alongside roomplan?
 >
 > Apple: Great question! We don’t have a recommended workflow for photogrammetry with RoomPlan. It is a great idea for developers to explore!
 
-2. 我们可以在进行扫描的过程中显示深度信息，因为底层是由 ARKit 实现的；
+b. 我们可以在进行扫描的过程中显示深度信息，因为底层是由 ARKit 实现的；
 
 > Q: Can sceneDepth depth maps be captured at the same time as as a RoomPlan scan?
 >
 > Apple: We enable sceneDepth in underlying arsession in roomCaptureSession. Therefore yes, you could also access it via `roomCaptureSession.arSession`.
 
-3. 目前的 RoomPlan 生成的模型有尺寸问题，这是一个已知问题，将在之后的版本被修复；
+c. 目前的 RoomPlan 生成的模型有尺寸问题，这是一个已知问题，将在之后的版本被修复；
 
 > Q: Currently the exported model comes out to be very very small in real world scale, is this a bug?
 >
 > Apple: This is listed as a known issue in Beta 1.
 
-4. 目前的 RoomPlan 不能生成 ARAnchor ，也无法保留扫描过程中使用的图像数据；
+d. 目前的 RoomPlan 不能生成 ARAnchor ，也无法保留扫描过程中使用的图像数据；
 
 > Q: Is it possible to use a room plan as an anchor for future AR sessions?
 >
