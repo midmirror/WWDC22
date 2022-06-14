@@ -6,7 +6,7 @@ session_ids: [10127]
 
 > 作者：彪彪，WWDC 2022 学生挑战赛获奖者，第六届移动应用创新赛 AR 赛道第一名
 >
-> 审核：苹果API搬运工，爱写文章的 ARKit 开发者。专栏[《ARKit 与计算几何》](https://xiaozhuanlan.com/computationalgeometry)，[《Metal Shader 快速使用入门》](https://xiaozhuanlan.com/metalforbeginner)
+> 审核：苹果 API 搬运工，爱写文章的 ARKit 开发者。专栏[《ARKit 与计算几何》](https://xiaozhuanlan.com/computationalgeometry)，[《Metal Shader 快速使用入门》](https://xiaozhuanlan.com/metalforbeginner)
 
 > **注：因为文章撰写时，RoomPlan 还处于 Beta 软件阶段，我们将根据最终的 API 更新一些内容**
 
@@ -111,11 +111,11 @@ class RoomCaptureViewController: UIViewController{
     private var roomCaptureSessionConfig: RoomCaptureSession.Configuration 
 
     private func startSession() {
-          roomCaptureView?.captureSession.run(configuration: roomCaptureSessionConfig)
-          // need more code...
+        roomCaptureView?.captureSession.run(configuration: roomCaptureSessionConfig)
+        // Need more code...
     }
     private func stopSession() {
-          roomCaptureView?.captureSession.stop()
+        roomCaptureView?.captureSession.stop()
     }
 }
 
@@ -125,19 +125,19 @@ class RoomCaptureViewController: UIViewController{
 
 ```swift
 class RoomCaptureViewController: UIViewController, RoomCaptureViewDelegate{
-     // ...
-   private var finalResults: CapturedRoom?
-  
-   // 选择扫描结束后是否要进行后期处理
+    // ...
+    private var finalResults: CapturedRoom?
+    
+    // 选择扫描结束后是否要进行后期处理
     func captureView(shouldPresent roomDataForProcessing: CapturedRoomData, error: Error?) -> Bool {
         return true
     }
-  // 选择最终模型如何处理
-      func captureView(didPresent processedResult: CapturedRoom, error: Error?) {
+    // 选择最终模型如何处理
+    func captureView(didPresent processedResult: CapturedRoom, error: Error?) {
         // 存储以便后期使用
-          finalResults = processdResult
-          // 或者导出
-          try processdResult.export(to: destinationURL)
+        finalResults = processdResult
+        // 或者导出
+        try processdResult.export(to: destinationURL)
     }
 }
 ```
@@ -180,8 +180,8 @@ class AnotherRoomCaptureViewController: UIViewController{
     
     override func viewDidLoad() {
         super.viewDidLoad()
-          // Allow the ViewController to get real-time updates from the RoomCaptureSession.
-          captureSession.delegate = self
+        // Allow the ViewController to get real-time updates from the RoomCaptureSession.
+        captureSession.delegate = self
         // Set up previewVisualizer
     }
   
@@ -209,21 +209,21 @@ class AnotherRoomCaptureViewController: UIViewController{
 
 ```swift
 class Visualizer{
-      // ...
-      func update(model: CapturedRoom){
+    // ...
+    func update(model: CapturedRoom){
         // Your own code
     }
-      func provide(instruction: RoomCaptureSession.Instruction){
+    func provide(instruction: RoomCaptureSession.Instruction){
         // Your own code
     }
 }
 
 class AnotherRoomCaptureViewController: UIViewController, RoomCaptureSessionDelegate{
-      // ...
-      func captureSession(_ session: RoomCaptureSession, didUpdate room: CapturedRoom) {
+    // ...
+    func captureSession(_ session: RoomCaptureSession, didUpdate room: CapturedRoom) {
         previewVisualizer.update(model: room)
-      }
-      func captureSession(_ session: RoomCaptureSession, didProvide instruction: RoomCaptureSession.Instruction) {
+    }
+    func captureSession(_ session: RoomCaptureSession, didProvide instruction: RoomCaptureSession.Instruction) {
         previewVisualizer.provide(instruction: instruction)
     }
 }
@@ -235,12 +235,14 @@ class AnotherRoomCaptureViewController: UIViewController, RoomCaptureSessionDele
 
 ```swift
 class AnotherRoomCaptureViewController: UIViewController, RoomCaptureSessionDelegate{
-        // ...
-        // Set up RoomBuilder
+    // ...
+    
+    // Set up RoomBuilder
     // [From Digital Lounge]: the ConfigurationOptions.beautifyObjects only affect captured objects
     var roomBuilder = RoomBuilder(options: [.beautifyObjects])
-      // Process the fianl data or handle error
-      func captureSession(_ session: RoomCaptureSession, didEndWith data: CapturedRoomData, error: Error?) {
+    
+    // Process the fianl data or handle error
+    func captureSession(_ session: RoomCaptureSession, didEndWith data: CapturedRoomData, error: Error?) {
         if let error = error{
             print("Error: \(error)")
         }
