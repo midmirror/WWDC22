@@ -6,7 +6,7 @@ session_ids: [10127]
 
 > 作者：彪彪，WWDC 2022 学生挑战赛获奖者，第六届移动应用创新赛 AR 赛道第一名
 >
-> 审核：苹果API搬运工，爱写文章的 ARKit 开发者。专栏[《ARKit 与计算几何》](https://xiaozhuanlan.com/computationalgeometry)，[《Metal Shader 快速使用入门》](https://xiaozhuanlan.com/metalforbeginner)
+> 审核：苹果 API 搬运工，爱写文章的 ARKit 开发者。专栏[《ARKit 与计算几何》](https://xiaozhuanlan.com/computationalgeometry)，[《Metal Shader 快速使用入门》](https://xiaozhuanlan.com/metalforbeginner)
 
 > **注：因为文章撰写时，RoomPlan 还处于 Beta 软件阶段，我们将根据最终的 API 更新一些内容**
 
