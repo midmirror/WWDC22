@@ -36,18 +36,17 @@ session_ids: [10127]
 ## Apple 的 AR/MR 技术发展回顾
 
 Apple 关于 AR/MR 的布局最早可以追溯到 2014 年，在那一年 Apple 推出了**Metal Shading Language**，之后 2017 年首次推出 ARKit，2018 年推出了 3D 模型快速预览框架 AR Quick Look，2019 年推出基于 Metal 的渲染引擎 RealityKit，2021 年推出了三维模型建模技术 Object Capture 以及今年推出了参数化室内建模框架 RoomPlan 。可以看到，从最基本的相机姿态计算与跟踪技术到 3D 内容快速创作工具，从底层渲染技术到高级渲染框架，经过 8 年布局，Apple 现在已经为未来的产品做好了一切准备。
-
-<img src="./images/pic1.png" style="zoom:50%;" />
+![](https://images.xiaozhuanlan.com/photo/2022/7eb06e75584a82567a3b6a46eaa5ebec.jpg)
 
 今天的主角—— RoomPlan ，虽然它并不是一个开源的框架，但根据官方的介绍我们能对其背后的原理进行一些简单的介绍。
 
-1. 首先 RoomPlan 必须运行在配备 LiDAR 的设备上（无论是 iPhone 或是 iPad ）。我们知道，传统的相机拍摄得到的图像相比我们人眼睛看到的场景丢失了**深度**这个维度的信息，而 Apple 设备上配备的 LiDAR 相机（ 实质上是 DToF 相机）能通过计算飞行时间快速得到深度信息，使得测量距离既准确又便捷。虽然说学术界有很多研究如何只通过图片去估计深度的信息，但是这样会产生大量的计算，增加处理器负担。预期未来如果 Apple 想让未配备 LiDAR 的设备也能运行 RoomPlan ，可以通过深度估计算法实现。（但是个人预测之后的设备都应该会标配 LiDAR ，而且本身 AR 就对处理器要求很高，增加不必要的计算量是不值得的）
+1、首先 RoomPlan 必须运行在配备 LiDAR 的设备上（无论是 iPhone 或是 iPad ）。我们知道，传统的相机拍摄得到的图像相比我们人眼睛看到的场景丢失了**深度**这个维度的信息，而 Apple 设备上配备的 LiDAR 相机（ 实质上是 DToF 相机）能通过计算飞行时间快速得到深度信息，使得测量距离既准确又便捷。虽然说学术界有很多研究如何只通过图片去估计深度的信息，但是这样会产生大量的计算，增加处理器负担。预期未来如果 Apple 想让未配备 LiDAR 的设备也能运行 RoomPlan ，可以通过深度估计算法实现。（但是个人预测之后的设备都应该会标配 LiDAR ，而且本身 AR 就对处理器要求很高，增加不必要的计算量是不值得的）
 
    > DToF 拓展阅读：[ToF 系统综述](https://faster-than-light.net/TOFSystem_C1/)
 
-   <img src="./images/pic2.png" style="zoom:50%;" />
+![](https://images.xiaozhuanlan.com/photo/2022/32ee1ac03adda44dd6544e0b79f087d2.jpg)
 
-2. RoomPlan 在扫描过程中能识别到一些很常见的屋内结构，比如窗户、地板、墙面等等，以及预设的家具，包括壁炉、沙发、椅子、桌子等等，并在之后导出的模型中有对应的家具种类标签。正如官方视频中提到的，整个扫描过程中运用到了相关的深度学习算法。简单剖析一下，其背后其实就是计算机视觉的核心问题——如何理解一张图片？人们一直想赋予机器人的视觉能力，这个一开始被认为非常简单的目标发展到现在仍然是研究的热点之一。总体来看，让计算机理解一张图片可以分为三个阶段：
+2、RoomPlan 在扫描过程中能识别到一些很常见的屋内结构，比如窗户、地板、墙面等等，以及预设的家具，包括壁炉、沙发、椅子、桌子等等，并在之后导出的模型中有对应的家具种类标签。正如官方视频中提到的，整个扫描过程中运用到了相关的深度学习算法。简单剖析一下，其背后其实就是计算机视觉的核心问题——如何理解一张图片？人们一直想赋予机器人的视觉能力，这个一开始被认为非常简单的目标发展到现在仍然是研究的热点之一。总体来看，让计算机理解一张图片可以分为三个阶段：
 
    1. 分类，首先将图片分类，为之后的检测、分割做好铺垫；
    2. 检测，简而言之就是找到图像中特定关心的目标区域；
@@ -63,9 +62,9 @@ Apple 关于 AR/MR 的布局最早可以追溯到 2014 年，在那一年 Apple 
    >
    > [DeLay: Robust Spatial Layout Estimation for Cluttered Indoor Scenes](https://cvgl.stanford.edu/papers/delay-robust-spatial.pdf)
 
-   <img src="./images/pic3.png" style="zoom:50%;" />
+![](https://images.xiaozhuanlan.com/photo/2022/b1117da2d54f89729714b9ae875a617d.jpg)
 
-3. RoomPlan 是如何从一张张图片中得到三维的模型？这和去年的 Object Capture 原理有点类似。关于三维重建相关的技术，需要从最基础的多视图三维重建算法开始说起，即通过拍摄到的物体图像序列，对每一张图片进行特征点检测和特征点匹配，通过几何关系计算还原出物体的三维结构。今年的 RoomPlan 并没有重建出室内环境各种模型的纹理，而是使用包围盒（ Bounding Box ）来代替，我认为一方面是从性能考虑，在重建的同时恢复材质信息并烘焙到模型上会带来大量的计算量，即使有 M 系列芯片的支持也需要进行大量的优化，另一方面，近期在学术界火热的新技术：Neural Rendering 可以解决相关问题，Apple 可能是在蓄力，让我们拭目以待。
+3、RoomPlan 是如何从一张张图片中得到三维的模型？这和去年的 Object Capture 原理有点类似。关于三维重建相关的技术，需要从最基础的多视图三维重建算法开始说起，即通过拍摄到的物体图像序列，对每一张图片进行特征点检测和特征点匹配，通过几何关系计算还原出物体的三维结构。今年的 RoomPlan 并没有重建出室内环境各种模型的纹理，而是使用包围盒（ Bounding Box ）来代替，我认为一方面是从性能考虑，在重建的同时恢复材质信息并烘焙到模型上会带来大量的计算量，即使有 M 系列芯片的支持也需要进行大量的优化，另一方面，近期在学术界火热的新技术：Neural Rendering 可以解决相关问题，Apple 可能是在蓄力，让我们拭目以待。
 
    > 拓展搜索：Epipolar Geometry ，Multi-View Reconstruction
    > 相关论文阅读推荐
@@ -73,7 +72,7 @@ Apple 关于 AR/MR 的布局最早可以追溯到 2014 年，在那一年 Apple 
    >
    > [Neural Rendering in a Room: Amodal 3D Understanding and Free-Viewpoint Rendering for the Closed Scene Composed of Pre-Captured Objects](http://www.cad.zju.edu.cn/home/gfzhang/papers/nr_in_a_room/nr_in_a_room_highres.pdf)
 
-   <img src="./images/pic4.png" style="zoom:50%;" />
+![](https://images.xiaozhuanlan.com/photo/2022/c89c51840c5c32c07690bd170bf1d7b8.jpg)
 
 ## 关于 RoomPlan
 
@@ -81,7 +80,7 @@ Apple 关于 AR/MR 的布局最早可以追溯到 2014 年，在那一年 Apple 
 
 RoomPlan 是 Apple **“把我们的周遭的世界带入 App 中”** 计划的一员，这个计划还包括去年推出的 Object Capture 技术。Object Capture 让我们可以通过拍摄一组现实中物体的照片，然后运用计算摄影测量技术生成真实的 3D 模型，今年的 RoomPlan 则让大家使用配备 LiDAR 的设备，去扫描得到室内场景的 3D 模型，模型既反映了房间大小，同样还包含一些框架内可以识别的家具（以大小不一的包围盒代替）。整个过程使用到了 ARKit 中的机器学习算法能力、渲染过程使用的是 RealityKit 框架，最后输出的是 USD 或 USDZ 模型。
 
-<img src="./images/pic5.png" style="zoom:50%;" />
+![](https://images.xiaozhuanlan.com/photo/2022/db7c1758ca6a7460e10946e7d187b280.jpg)
 
 关于 RoomPlan 我们将分为两部分来介绍，首先是如何通过官方的接口，直接在现有的应用中使用 RoomPlan ，第二部分则是介绍如果想要定制化整个扫描过程如何来实现。
 
@@ -93,7 +92,7 @@ RoomCaptureView 是 UIView 的子类，我们可以轻松地在自己的应用�
 - 实时生成当前扫描得到的房间模型；
 - 在一些特殊情况时候显示对用户的引导；
 
-<img src="./images/pic6.png" style="zoom:50%;" />
+![](https://images.xiaozhuanlan.com/photo/2022/8212a04f24669baad26446652991fe63.jpg)
 
 使用  RoomCaptureView 只需要通过四个简单的步骤。
 
@@ -262,25 +261,25 @@ class AnotherRoomCaptureViewController: UIViewController, RoomCaptureSessionDele
 
 再次和大家分享部分来自 Digital Lounge 的一些开发者提问与 Apple 工程师官方回复，希望解决大家可能存在的相同疑问：
 
-1. Apple 官方工程师表示，标准的处理流程不会将纹理烘焙到最终的模型上，这个步骤目前只能由开发者自己想办法完成；
+1、Apple 官方工程师表示，标准的处理流程不会将纹理烘焙到最终的模型上，这个步骤目前只能由开发者自己想办法完成；
 
    > Q: Is there a recommended workflow for performing photogrammetry to capture textures alongside roomplan?
    >
    > Apple: Great question! We don’t have a recommended workflow for photogrammetry with RoomPlan. It is a great idea for developers to explore!
 
-2. 我们可以在进行扫描的过程中显示深度信息，因为底层是由 ARKit 实现的；
+2、我们可以在进行扫描的过程中显示深度信息，因为底层是由 ARKit 实现的；
 
    > Q: Can sceneDepth depth maps be captured at the same time as a RoomPlan scan?
    >
    > Apple: We enable sceneDepth in underlying arsession in roomCaptureSession. Therefore yes, you could also access it via `roomCaptureSession.arSession`.
 
-3. 目前的 RoomPlan 生成的模型有尺寸问题，这是一个已知问题，将在之后的版本被修复；
+3、目前的 RoomPlan 生成的模型有尺寸问题，这是一个已知问题，将在之后的版本被修复；
 
    > Q: Currently the exported model comes out to be very very small in real-world scale, is this a bug?
    >
    > Apple: This is listed as a known issue in Beta 1.
 
-4. 目前的 RoomPlan 不能生成 ARAnchor ，也无法保留扫描过程中使用的图像数据；
+4、目前的 RoomPlan 不能生成 ARAnchor ，也无法保留扫描过程中使用的图像数据；
 
    > Q: Is it possible to use a room plan as an anchor for future AR sessions?
    >
@@ -290,7 +289,7 @@ class AnotherRoomCaptureViewController: UIViewController, RoomCaptureSessionDele
 
 我们先来了解一下 CapturedRoom 的数据结构，以便在开发期间获取我们需要的数据。
 
-<img src="./images/pic7.png" style="zoom:50%;" />
+![](https://images.xiaozhuanlan.com/photo/2022/8212a04f24669baad26446652991fe63.jpg)
 
 最顶层是 CapturedRoom ，它由 Surfaces 和 Objects 组成。
 
@@ -302,7 +301,7 @@ class AnotherRoomCaptureViewController: UIViewController, RoomCaptureSessionDele
 
 - Object 包含能够支持扫描识别到的家具类别，例如桌子、床、沙发等，全部支持的类别如下
 
-  <img src="./images/pic8.png" style="zoom:50%;" />
+![](https://images.xiaozhuanlan.com/photo/2022/9c23e9a289da912e31a577423165bdfd.jpg)
 
 - Surface 和 Object 又一些共同的属性，例如：
 
@@ -341,23 +340,23 @@ a. 提供必要的用户引导。
 
 因为用户所处的环境不一定理想，光照、场景纹理都会影响到 AR 应用的体验，所以最佳实践方式是在 App 使用 AR 功能向用户提供适当的提醒，比如像火星任务这款 App 在最开始展示的提醒一样；
 
-<img src="./images/pic9.png" style="zoom:50%;" />
+![](https://images.xiaozhuanlan.com/photo/2022/13bbe9d8f95ac41f0041870a80ea7884.jpg)
 
 AR 都需要一个初始化过程，即使配备了 LiDAR 的设备也会因为各种原因造成跟踪受限，而普遍来说大多数用户都没使用过 AR 应用，所以初始化过程应该有足够准确、简单的引导过程，比如在 RoomPlan 中的初始化引导；ARKit 中的两种平面初始化引导以及 Location Anchor 在使用时候的初始化引导。需要注意的是，引导的界面不一定都需要和 Apple 的一致，比如 DoodleLens 这款 App 就有自定义实现的引导界面；
 
-<img src="./images/pic10.png" style="zoom:50%;" />
+![](https://images.xiaozhuanlan.com/photo/2022/c07136cda83bf1a9ff667f5d4a3c4287.jpg)
 
 最后，在使用 AR 功能期间，因为抖动，移动速度太快等原因可能会影响到 AR 的跟踪准确性，所以当发生了以上情况时，最好也提醒用户，比如缓慢移动、靠近或远离墙面等。
 
-<img src="./images/pic11.png" style="zoom:50%;" />
+![](https://images.xiaozhuanlan.com/photo/2022/963cfa81924d32bc09ba42c6f4b59583.jpg)
 
 b. 相比于 2D 世界，AR 让我们拥有无限宽广的平台去设计用户交互与产品逻辑，也正是因为如此，用户保持不动将无法完美体验到 AR 的奇妙与乐趣，而引导用户走动起来则是我们设计、开发者需要考虑的问题，比如在 RoomPlan 里，识别到的场景结构信息会随着用户移动逐步的扩展延伸，连接起来，这一方面给予用户足够的视觉反馈，也引导用户朝着没有扫描到的区域去移动；另外 Apple Map 在使用 AR 进行导航时也考虑了这一方面，不断闪动的箭头引导用户朝着目的地移动。除了 Apple 官方的应用，在 ScavengAR 中我们也能看到设计者用心设计了引导标签，引导用户去现实世界中探险。
 
-<img src="./images/pic12.png" style="zoom:50%;" />
+![](https://images.xiaozhuanlan.com/photo/2022/7d71da6e421e17f2a18b84a603e0d12f.jpg)
 
 c. 因为人们对于现实世界非常熟悉，所以虚拟物体只要在任何方面有一点破绽就会被人们发现，为了给人们提供沉浸的 AR 体验，我们需要在实现 AR 场景时候一定要注意现实中的一些物理常识，比如人物遮挡关系、物体遮挡关系，环境光照方向，虚拟物体的影子方向等。利用 RealityKit 或 AR Quick Look 等框架则可以很轻松的实现上述目标，如果自己实现渲染引擎则要时刻记住上面提到的注意事项。
 
-<img src="./images/pic13.png" style="zoom:50%;" />
+![](https://images.xiaozhuanlan.com/photo/2022/6d3fbae977868d9eed7acc3a9664ec96.jpg)
 
 ### 3. RoomPlan 的最佳实践建议有哪些
 
@@ -372,5 +371,5 @@ c. 因为人们对于现实世界非常熟悉，所以虚拟物体只要在任�
 > 官方 Demo ：[RoomPlan Demo](https://developer.apple.com/documentation/roomplan/create_a_3d_model_of_an_interior_room_by_guiding_the_user_through_an_ar_experience)
 >
 > 运行要求：iOS 16.0+，iPadOS 16.0+，Xcode 14.0+，iPhone 或 iPad 配备 LiDAR
->
-> ![运行效果](./images/RoomPlan.gif)
+
+![运行效果](http://images.xiaozhuanlan.com/photo/2022/62781f3cabe5398cd9a0fafd999d61bb.gif)
