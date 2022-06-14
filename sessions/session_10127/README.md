@@ -2,11 +2,11 @@
 session_ids: [10127]
 ---
 
-# Session 10127/10131 - 使用 RoomPlan 扫描创建参数化三维室内场景
+# WWDC22  10127/10131 - 使用 RoomPlan 扫描创建参数化三维室内场景
 
 > 作者：彪彪，WWDC 2022 学生挑战赛获奖者，第六届移动应用创新赛 AR 赛道第一名
 >
-> 审核：
+> 审核：苹果API搬运工，爱写文章的 ARKit 开发者。专栏[《ARKit 与计算几何》](https://xiaozhuanlan.com/computationalgeometry)，[《Metal Shader 快速使用入门》](https://xiaozhuanlan.com/metalforbeginner)
 
 > **注：因为文章撰写时，RoomPlan 还处于 Beta 软件阶段，我们将根据最终的 API 更新一些内容**
 
@@ -61,7 +61,7 @@ Apple 关于 AR/MR 的布局最早可以追溯到 2014 年，在那一年 Apple 
    >
    > [A survey of Object Classification and Detection based on 2D/3D data](https://arxiv.org/pdf/1905.12683.pdf)
    >
-   > [DeLay: Robust Spatial Layout Estimation for Cluttered Indoor Scenes](
+   > [DeLay: Robust Spatial Layout Estimation for Cluttered Indoor Scenes](https://cvgl.stanford.edu/papers/delay-robust-spatial.pdf)
 
    <img src="./images/pic3.png" style="zoom:50%;" />
 
@@ -79,7 +79,7 @@ Apple 关于 AR/MR 的布局最早可以追溯到 2014 年，在那一年 Apple 
 
 读到这里，相信你一定对 Apple 的 AR/MR 有了一定了解，那么现在就让我们走近 RoomPlan 。
 
-RoomPlan 是 Apple **“把我们的周遭的世界带入 App 中”**计划的一员，这个计划还包括去年推出的 Object Capture 技术。Object Capture 让我们可以通过拍摄一组现实中物体的照片，然后运用计算摄影测量技术生成真实的 3D 模型，今年的 RoomPlan 则让大家使用配备 LiDAR 的设备，去扫描得到室内场景的 3D 模型，模型既反映了房间大小，同样还包含一些框架内可以识别的家具（以大小不一的包围盒代替）。整个过程使用到了 ARKit 中的机器学习算法能力、渲染过程使用的是 RealityKit 框架，最后输出的是 USD 或 USDZ 模型。
+RoomPlan 是 Apple **“把我们的周遭的世界带入 App 中”** 计划的一员，这个计划还包括去年推出的 Object Capture 技术。Object Capture 让我们可以通过拍摄一组现实中物体的照片，然后运用计算摄影测量技术生成真实的 3D 模型，今年的 RoomPlan 则让大家使用配备 LiDAR 的设备，去扫描得到室内场景的 3D 模型，模型既反映了房间大小，同样还包含一些框架内可以识别的家具（以大小不一的包围盒代替）。整个过程使用到了 ARKit 中的机器学习算法能力、渲染过程使用的是 RealityKit 框架，最后输出的是 USD 或 USDZ 模型。
 
 <img src="./images/pic5.png" style="zoom:50%;" />
 
@@ -144,11 +144,11 @@ class RoomCaptureViewController: UIViewController, RoomCaptureViewDelegate{
 
 在这里与大家分享部分来自 Digital Lounge 的一些开发者提问与 Apple 工程师官方回复，希望解决大家可能存在的相同疑问：
 
-1. 默认的 RoomCaptureView 无法根据扫描到的物体标签进行部分现实，如果想实现这个功能需要自己利用数据 API 实现；
+1. 默认的 RoomCaptureView 无法根据扫描到的物体标签进行部分显示，如果想实现这个功能需要自己利用数据 API 实现；
 
 > Q: Would it be possible to choose which components to display from RoomCaptureView and adjust location and sizing on screen?
 >
-> Apple: The Model is not currently adjustable in the `RoomCaptureView`.  Custom model could be implemented if desired using a custom visualizer.
+> Apple: The Model is not currently adjustable in the `RoomCaptureView`.  A custom model could be implemented if desired using a custom visualizer.
 
 ### 2. 自定义的数据 API
 
@@ -193,8 +193,8 @@ class AnotherRoomCaptureViewController: UIViewController{
 
 - `captureSession(_:didStartWith:)` 当配置好的扫描开始运行时被调用
 - `captureSession(_:didAdd:)` 当新扫描得到的模型（包括平面与物体）时被调用；
-- `captureSession(_:didChange:)` 扫描的模型中有物体或平面发生了维度、平移等变化时被调用；
-- `captureSession(_ session: didUpdate:)` 扫描得到的模型（包括平面与物体）有快照或整体更新时被调用（见下方示例代码）；
+- `captureSession(_:didChange:)` 扫描的模型中有物体或平面发生了尺寸、位置等变化时被调用；
+- `captureSession(_ session: didUpdate:)` 扫描得到的模型（包括平面与物体）有实时增量更新或整体全量更新时被调用（见下方示例代码）；
 - `captureSession(_ session: didProvide:)` 有用户的引导需要被显示时被调用（见下方示例代码）；
 - `captureSession(_:didRemove:)` 有历史扫描得到的平面或物体被移除时被调用；
 - `captureSession(_:didEndWith:error:)` 因为在模型处理阶段时会用到，必须实现（见下一节示例代码）
