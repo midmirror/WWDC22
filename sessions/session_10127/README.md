@@ -194,8 +194,8 @@ class AnotherRoomCaptureViewController: UIViewController{
 - `captureSession(_:didStartWith:)` 当配置好的扫描开始运行时被调用
 - `captureSession(_:didAdd:)` 当新扫描得到的模型（包括平面与物体）时被调用；
 - `captureSession(_:didChange:)` 扫描的模型中有物体或平面发生了尺寸、位置等变化时被调用；
-- `captureSession(_ session: didUpdate:)` 扫描得到的模型（包括平面与物体）有实时增量更新或整体全量更新时被调用（见下方示例代码）；
-- `captureSession(_ session: didProvide:)` 有用户的引导需要被显示时被调用（见下方示例代码）；
+- `captureSession(_: didUpdate:)` 扫描得到的模型（包括平面与物体）有实时增量更新或整体全量更新时被调用（见下方示例代码）；
+- `captureSession(_: didProvide:)` 有用户的引导需要被显示时被调用（见下方示例代码）；
 - `captureSession(_:didRemove:)` 有历史扫描得到的平面或物体被移除时被调用；
 - `captureSession(_:didEndWith:error:)` 因为在模型处理阶段时会用到，必须实现（见下一节示例代码）
 
