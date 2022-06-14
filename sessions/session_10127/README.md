@@ -12,11 +12,19 @@ session_ids: [10127]
 
 相信今年 WWDC 召开之前，很多朋友的预测就是 RealityOS 将“千呼万唤始出来”，可惜无论是关于增强现实、混合现实（下统一称 AR/MR ）新的操作系统还是新的硬件都没有任何影子，而且更令人感到奇怪的是，2022 年 WWDC 中关于 AR/MR 的相关技术更新特别少，甚至第一天的 Keynote 中都没有任何相关的技术展示，给人一种“此地无银三百两”的感觉。不管怎么说这都是作者的个人猜测，虽说今年 AR/MR 技术没有太多更新，但还是有一个新框架得到了大家热烈讨论、试用、夸赞，也就是今天的主角—— RoomPlan 。
 
-本文将主要聚焦于 Apple 的 AR/MR 新 API：RoomPlan 。全文共分为 3 个部分，第一部分是 Apple 的 AR/MR 技术发展回顾，以及 RoomPlan 和 Object Capture 技术背后的原理简介。第二部分是对于 RoomPlan 技术的介绍，包括如何使用官方 API 快速在相关 App 中使用 RoomPlan，以及如何通过数据 API 自定义 RoomPlan 的使用。最后一部分是关于 AR/MR 应用设计的相关建议。
+本文将主要聚焦于 Apple 的 AR/MR 新 API：RoomPlan 。全文共分为 3 个部分：
+
+第一部分是 Apple 的 AR/MR 技术发展回顾，以及 RoomPlan 和 Object Capture 技术背后的原理简介。
+
+第二部分是对于 RoomPlan 技术的介绍，包括如何使用官方 API 快速在相关 App 中使用 RoomPlan，以及如何通过数据 API 自定义 RoomPlan 的使用。
+
+最后一部分是关于 AR/MR 应用设计的相关建议。
 
 > 阅读建议
 > 如果你是被 RoomPlan 吸引的 AR/MR 新手，建议全文阅读，并配合以往的小专栏文章进行学习；
+>
 > 如果你只关心最新 RoomPlan 的 API，可以直接跳到文章的第二部分
+>
 > 如果你想了解使用 RoomPlan 的注意事项以及 AR/MR 应用的设计原则，可以直接跳转到文章的第三部分
 >
 > 相关 Session ：
@@ -34,6 +42,8 @@ Apple 关于 AR/MR 的布局最早可以追溯到 2014 年，在那一年 Apple 
 今天的主角—— RoomPlan ，虽然它并不是一个开源的框架，但根据官方的介绍我们能对其背后的原理进行一些简单的介绍。
 
 1. 首先 RoomPlan 必须运行在配备 LiDAR 的设备上（无论是 iPhone 或是 iPad ）。我们知道，传统的相机拍摄得到的图像相比我们人眼睛看到的场景丢失了**深度**这个维度的信息，而 Apple 设备上配备的 LiDAR 相机（ 实质上是 DToF 相机）能通过计算飞行时间快速得到深度信息，使得测量距离既准确又便捷。虽然说学术界有很多研究如何只通过图片去估计深度的信息，但是这样会产生大量的计算，增加处理器负担。预期未来如果 Apple 想让未配备 LiDAR 的设备也能运行 RoomPlan ，可以通过深度估计算法实现。（但是个人预测之后的设备都应该会标配 LiDAR ，而且本身 AR 就对处理器要求很高，增加不必要的计算量是不值得的）
+
+   > DToF 拓展阅读：[ToF系统综述](https://faster-than-light.net/TOFSystem_C1/)
 
    <img src="./images/pic2.png" style="zoom:50%;" />
 
