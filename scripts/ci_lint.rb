@@ -4,7 +4,7 @@ require './scripts/helper.rb'
 files = git.added_files.select { |f| f.end_with?('.md') }
 
 if files.empty?
-  puts 'No markdown file needs to be lint' 
+  puts 'No markdown file needs to be lint'
   return
 end
 
@@ -16,7 +16,7 @@ if session_ids.empty?
   fail Helper.session_ids_not_found_message
 
   begin
-    message = "markdown 文件无法识别出 session_ids，请按照 GitHub 上的提示正确填写。 #{pull_request_url}" 
+    message = "markdown 文件无法识别出 session_ids，请按照 GitHub 上的提示正确填写。 #{pull_request_url}"
     response = Helper.send_message(message, [pull_request_author])
     puts response.status, response.body
 
@@ -46,7 +46,7 @@ lint_results.first(1000).each do |lint_result|
     text = error['text']
     rule_information = error['ruleInformation']
     message = ""
-    message << error['description'] 
+    message << error['description']
     message << " `#{text}`\n" if text
     message << "For more details please visit [#{error['type']}](#{rule_information})." if rule_information
     fail(message, file: file, line: line)
