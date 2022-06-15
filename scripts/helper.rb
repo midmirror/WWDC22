@@ -47,6 +47,7 @@ module Helper
       session_ids: session_ids,
       type: type
     }
+    puts content
     Faraday.post(
       "http://127.0.0.1:4040/wwdc/notify",
       content.to_json,
@@ -59,6 +60,7 @@ module Helper
       message: message,
       at_user_list: at_user_list
     }
+    puts content
     Faraday.post(
       'http://127.0.0.1:4040/wwdc/mention',
       content.to_json,
