@@ -17,9 +17,9 @@ module Helper
     arguments << "./scripts/front_matters_output.js"
     arguments << files_as_shell_arguments(files)
     command = arguments.join(' ')
-    
+
     puts "Command: ", command
-    results_json = `#{command}` 
+    results_json = `#{command}`
     puts "Command output: ", results_json
     results = JSON.parse(results_json)
     results
@@ -28,7 +28,7 @@ module Helper
   def self.added_files(from, to)
     git_repo = Danger::GitRepo.new
     git_repo.diff_for_folder('.', from: from, to: to, lookup_top_level: true)
-    file_list = git_repo.diff.select { |diff| diff.type == "new" }.map(&:path) 
+    file_list = git_repo.diff.select { |diff| diff.type == "new" }.map(&:path)
     file_list
   end
 
@@ -42,11 +42,12 @@ module Helper
   end
 
   def self.send_group_message(message, session_ids, type)
-    content = { 
+    content = {
       message: message,
       session_ids: session_ids,
       type: type
     }
+    puts content
     Faraday.post(
       "http://127.0.0.1:4040/wwdc/notify",
       content.to_json,
@@ -59,6 +60,7 @@ module Helper
       message: message,
       at_user_list: at_user_list
     }
+    puts content
     Faraday.post(
       'http://127.0.0.1:4040/wwdc/mention',
       content.to_json,
@@ -68,7 +70,7 @@ module Helper
 
   def self.session_ids_not_found_message
     message = ""
-    message << "Markdown 文件中无法识别到 session_id，请在 markdown 文件前面加上对应的 session_id。范例：\n\n" 
+    message << "Markdown 文件中无法识别到 session_id，请在 markdown 文件前面加上对应的 session_id。范例：\n\n"
     message << "```markdown\n"
     message << "---\n"
     message << "session_ids: [10118]\n"
