@@ -6,7 +6,7 @@ session_ids: [10025]
 
 本文基于 [Session 10025](https://developer.apple.com/videos/play/wwdc2022/10025/) 梳理。
 
-> 作者：Layer(杨杰)，就职于抖音 iOS 即时通讯团队。一不小心吃胖了导致退役的 Coser，经常被可爱的人看到个人介绍。
+> 作者：Layer（杨杰），就职于抖音 iOS 即时通讯团队，经常被可爱的人看到个人介绍。
 >
 > 审核：
 
@@ -19,13 +19,12 @@ session_ids: [10025]
 ## 相关背景：VisionKit
 
 VisionKit 是 Apple 在 iOS 13 中引入的新框架，提供了图像和 iOS 摄像头的实时视频中的文本和结构化数据的检测。使用 VisionKit，则无需开发者手动的调整输入或进行检测，这些都会交给 VisionKit 处理。开发者可以专注于应用程序的其他部分。
-> 了解 VisionKit 的详细内容请参考 [VisionKit Documentation](https://developer.apple.com/documentation/visionkit)
 
+> 了解 VisionKit 的详细内容请参考 [VisionKit Documentation](https://developer.apple.com/documentation/visionkit)
 
 ## 引入问题：数据扫描
 
-我们将讨论如何从视频源中捕获设备可读的代码和文本，或者称之为数据扫描。 这里所说的「数据扫描」到底是指什么？这是一种使用传感器（如相机）读取数据的方式。
-通常，这些数据以文本的形式出现。 例如，包含电话号码、日期和价格等信息的收据。数据还可以是机器可读的代码，比如无处不在的二维码。 
+我们将讨论如何从视频源中捕获设备可读的代码和文本，或者称之为数据扫描。 这里所说的「数据扫描」到底是指什么？这是一种使用传感器（如相机）读取数据的方式。通常，这些数据以文本的形式出现。 例如，包含电话号码、日期和价格等信息的收据。数据还可以是机器可读的代码，比如无处不在的二维码。 
 
 ![](https://raw.githubusercontent.com/LLLLLayer/picture-bed/main/img/wwdc22/session10025/data_scanner.png)
 
@@ -33,13 +32,13 @@ VisionKit 是 Apple 在 iOS 13 中引入的新框架，提供了图像和 iOS �
 
 ## 历史方案 1：AVFoundation
 
-### 介绍
+### 方案 1 介绍
 
 ![](https://raw.githubusercontent.com/LLLLLayer/picture-bed/main/img/wwdc22/session10025/avfoundation_flow_chart.png)
 
-一种选择是我们可以使用 AVFoundation 框架。如图所示，将设备（AVCaptureDevice）输入（AVCaptureDevicelnput）和设备输出（AVCaptureMetadataOutput），连接到会话（AVCaptureSession），并对其进行配置（AVCaptureConnection）,生成 扫描数据（AVMetadataObjects）。
+一种选择是我们可以使用 AVFoundation 框架。如图所示，将设备（AVCaptureDevice）输入（AVCaptureDevicelnput）和设备输出（AVCaptureMetadataOutput），连接到会话（AVCaptureSession），并对其进行配置（AVCaptureConnection）,生成扫描数据（AVMetadataObjects）。
 
-### Demo
+### 方案 1 Demo
 
 > 这不是本 Session 的内容，但笔者实现了该方案的 Demo，供第一次接触的同学简单了解，并进行了简单的 Demo 录频演示及代码分解。
 
@@ -49,27 +48,25 @@ VisionKit 是 Apple 在 iOS 13 中引入的新框架，提供了图像和 iOS �
 
 **代码分解**
 
+除去用户授予程序访问相机的权限部分，我们来分段阅读代码，首先是简单的属性声明与 UI 布局逻辑：
+
 ```swift
 import UIKit
 import AVFoundation
 
 class ViewController: UIViewController {
 
-    // 1
-    lazy var session: AVCaptureSession = {
-        return AVCaptureSession.init()
-    }()
+    // 1. 捕获会话，用来配置捕获行为、协调来自输入设备的数据流，以捕获输出的对象
+    private var session: AVCaptureSession = AVCaptureSession()
     
-    // 2
-    lazy var captureVideoPreviewLayer: AVCaptureVideoPreviewLayer = {
-        return AVCaptureVideoPreviewLayer.init()
-    }()
+    // 2. 显示来自相机设备的视频的 CALayer
+    private var previewLayer: AVCaptureVideoPreviewLayer = AVCaptureVideoPreviewLayer()
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        // 3
+        // 3. 调整 UI 布局，并启动数据扫描
         view.layer.addSublayer(self.captureVideoPreviewLayer)
-        captureVideoPreviewLayer.frame = view.bounds
+            previewLayer.frame = view.bounds
         start()
     }
     
@@ -77,64 +74,63 @@ class ViewController: UIViewController {
 }
 ```
 
-1. 捕获会话，用来配置捕获行为、协调来自输入设备的数据流，以捕获输出的对象；
-2. 显示来自相机设备的视频的 `CoreAnimationLayer`；
-3. 调整 UI 布局，并启动数据扫描。
-
+接着是核心的的设备、输入流、输出流、会话链接及配置逻辑：
 
 ```swift
 class ViewController: UIViewController {
 
     // ...
     
-    func start() {
-        // 1
-        guard let captureDevice = AVCaptureDevice.default(for: .video) else {
-            assert(false, "CaptureDevice error!")
+    private func start() {
+        // 1. 获取捕获设备对象，捕获设备提供的媒体数据，单个设备可以提供一个或多个特定类型的媒体流
+        guard let device = AVCaptureDevice.default(for: .video) else {
+            assert(false, "Cevice error!")
             return
         }
         
-        // 2
-        guard let captureDeviceInput = try? AVCaptureDeviceInput.init(device: captureDevice) else {
-            assert(false, "CaptureDeviceInput error!")
+        // 2. 从设备中捕获媒体输入，AVCaptureDeviceInput 类是用于将捕获设备连接到 Session 的具体子类
+        guard let input = try? AVCaptureDeviceInput.init(device: device) else {
+            assert(false, "Input error!")
             return
         }
-        session.addInput(captureDeviceInput)
+        guard session.canAddInput(input) else {
+            assert(false, "Can't add input!")
+            return
+        }
+        session.addInput(input)
         
-        // 3
-        let captureDeviceOutput = AVCaptureMetadataOutput.init()
-        session.addOutput(captureDeviceOutput)
-        captureDeviceOutput.setMetadataObjectsDelegate(self, queue: DispatchQueue.global(qos: .default))
-        print(captureDeviceOutput.availableMetadataObjectTypes)
-        captureDeviceOutput.metadataObjectTypes = [.qr]
+        // 3. 捕获会话生成的元数据的输出，一个拦截由其关联的捕获会话生成的元数据的对象
+        let output = AVCaptureMetadataOutput.init()
+        session.addOutput(output)
+        guard session.canAddOutput(output) else {
+            assert(false, "Can't add output!")
+            return
+        }
+        output.setMetadataObjectsDelegate(self, queue: DispatchQueue.global(qos: .default))
+        output.metadataObjectTypes = [.qr]
         
-        // 4
-        captureVideoPreviewLayer.session = session
-        captureVideoPreviewLayer.videoGravity = .resizeAspectFill
+        // 4. 调整 Layer 以展示捕获会话视频
+        previewLayer.session = session
+        previewLayer.videoGravity = .resizeAspectFill
         
-        // 5
+        // 5. 启动捕获会话
         session.startRunning()
-    } 
+    }
 }
 ```
 
-1. 获取捕获设备对象，捕获设备提供的媒体数据，单个设备可以提供一个或多个特定类型的媒体流；
-2. 从设备中捕获媒体输入，`AVCaptureDeviceInput` 类是用于将捕获设备连接到 `Session` 的具体子类；
-3. 捕获会话生成的元数据的输出，一个拦截由其关联的捕获会话生成的元数据的对象；
-4. 调整 `CoreAnimationLayer` 以展示捕获会话视频；
-5. 启动捕获会话。
-
+最后是处理生成的扫描数据：
 
 ```swift
 extension ViewController: AVCaptureMetadataOutputObjectsDelegate {
-    // 1
+    // 1. 处理捕获会话生成的元数据
     func metadataOutput(_ output: AVCaptureMetadataOutput, didOutput metadataObjects: [AVMetadataObject], from connection: AVCaptureConnection) {
         guard !metadataObjects.isEmpty,
               let object = metadataObjects.first as? AVMetadataMachineReadableCodeObject,
               object.type == .qr else {
             return
         }
-        // 2
+        // 2. 更新 UI，进行弹窗提示
         DispatchQueue.main.async {
             let alert = UIAlertController.init(title: "Result", message: object.stringValue, preferredStyle: .alert)
             alert.addAction(UIAlertAction.init(title: "OK", style: .default))
@@ -144,21 +140,19 @@ extension ViewController: AVCaptureMetadataOutputObjectsDelegate {
 }
 ```
 
-1. 处理捕获会话生成的元数据；
-2. 更新 UI，进行弹窗提示。
-
+> 这里只取 `metadataObjects.first` 只是 Demo 的偷懒方法，例如微信会提示多个扫码结果，欢迎读者对该部分进行深入尝试。另外，AVMetadataMachineReadableCodeObject 的属性有 `var corners: [CGPoint]` 也可用于开发者绘制突出显示。但与 `DataScannerViewController` 提供的能力有一些差异，我们在后文将进行对比。
 
 ## 历史方案 2：AVFoundation & Vision 
 
-### 介绍
+### 方案 2 介绍
 
 ![](https://raw.githubusercontent.com/LLLLLayer/picture-bed/main/img/wwdc22/session10025/avfoundation_and_vision_flow_chart.png)
 
 如果我们还想捕获文本，另一种选择是将 AVFoundation 和 Vision 框架结合在一起。在此图中，我们创建的不是元数据输出，而是视频数据输出（AVCaptureVideoDataOutput）。视频数据输出导致样本缓冲区的交付（CMSampleBufferRef），这些缓冲区可以给到 VisionKit 以用于文本和条形码识别请求，通过创建一个请求处理程序（VNImageRequestHandler），调用相关算法（VNDetectBarcodesRequest、VNRecognizeTextRequest），从而产生 VisionObservation（VNBarcodeObservation、VNRecognizedTextObservation）。
 
-> 有关使用 Vision 进行数据扫描的更多信息，请查看 WWDC21 中的 “[Extract document data using Vision](https://developer.apple.com/videos/play/wwdc2021/10041/)”
+> 有关使用 Vision 进行数据扫描的更多信息，请查看 WWDC21 中的 “[Extract document data using Vision](https://developer.apple.com/videos/play/wwdc2021/10041/)”。
 
-### Demo
+### 方案 2 Demo
 
 > 这不是本 Session 的内容，但笔者实现了该方案的 Demo，供第一次接触的同学简单了解，并进行了简单的 Demo 录频演示及代码分解。
 
@@ -168,58 +162,7 @@ extension ViewController: AVCaptureMetadataOutputObjectsDelegate {
 
 **代码分解**
 
-```swift
-import UIKit
-import Vision
-import AVFoundation
-
-class ViewController: UIViewController {
-    
-    // 1
-    lazy var session: AVCaptureSession = {
-        return AVCaptureSession.init()
-    }()
-    
-    // 2
-    lazy var captureVideoPreviewLayer: AVCaptureVideoPreviewLayer = {
-        return AVCaptureVideoPreviewLayer.init()
-    }()
-    
-    // 3
-    lazy var textView: UITextView = {
-        let textView = UITextView()
-        textView.backgroundColor = UIColor.red.withAlphaComponent(0.5)
-        return textView
-    }()
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        // 4
-        view.layer.addSublayer(captureVideoPreviewLayer)
-        captureVideoPreviewLayer.frame = view.bounds
-        
-        view.addSubview(textView)
-        textView.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            textView.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 16.0),
-            textView.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -16.0),
-            textView.topAnchor.constraint(equalTo: view.topAnchor, constant: 56.0),
-            textView.heightAnchor.constraint(equalToConstant: 200)
-        ])
-        
-        start()
-    }
-    
-    // ...
-
-}
-```
-
-1. 捕获会话，用来配置捕获行为，并协调来自输入设备的数据流，以捕获输出的对象；
-2. 显示来自相机设备的视频的 `CoreAnimationLayer`；
-3. 显示使用的 UITextView；
-4. 调整 UI 布局，启动数据扫描。
-
+这部分我们重点关注与方案 1 的不同点，output 的类型使用 `AVCaptureVideoDataOutput` 而不是 `AVCaptureMetadataOutput`：
 
 ```swift
 class ViewController: UIViewController {
@@ -227,49 +170,30 @@ class ViewController: UIViewController {
     // ...
     
     func start() {
-        // 1
-        guard let captureDevice = AVCaptureDevice.default(for: .video) else {
-            assert(false, "CaptureDevice error!")
-            return
+        // ...
+        
+        // 3. VideoData 捕获输出，使用此输出来处理来自捕获视频的压缩或未压缩帧
+        let output = AVCaptureVideoDataOutput.init()
+        guard session.canAddOutput(output) else {
+            assert(false, "Can't add output!")
         }
+        session.addOutput(output)
+        output.setSampleBufferDelegate(self, queue: DispatchQueue.global(qos: .default))
         
-        // 2
-        guard let captureDeviceInput = try? AVCaptureDeviceInput.init(device: captureDevice) else {
-            assert(false, "CaptureDeviceInput error!")
-            return
-        }
-        session.addInput(captureDeviceInput)
-        
-        // 3
-        let captureVideoDataOutput = AVCaptureVideoDataOutput.init()
-        session.addOutput(captureVideoDataOutput)
-        captureVideoDataOutput.setSampleBufferDelegate(self, queue: DispatchQueue.global(qos: .default))
-        
-        // 4
-        captureVideoPreviewLayer.session = session
-        captureVideoPreviewLayer.videoGravity = .resizeAspectFill
-        
-        // 5
-        session.startRunning()
+        // ...
     }
 }
 ```
 
-1. 获取捕获设备对象；捕获设备提供媒体数据，单个设备可以提供一个或多个特定类型的媒体流；
-2. 从设备中捕获媒体输入；`AVCaptureDeviceInput` 类是用于将捕获设备连接到 `Session` 的具体子类；
-3. `VideoData` 捕获输出，使用此输出来处理来自捕获视频的压缩或未压缩帧；
-4. 调整 `CoreAnimationLayer` 以展示捕获会话视频；
-5. 启动捕获会话。
-
+接下来，是 `AVCaptureVideoDataOutputSampleBufferDelegate` 部分：
 
 ```swift
 extension ViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        
-        // 1
+        // 1. 创建一个请求处理程序，该处理程序对样本缓冲区中包含的图像执行请求
         let requestHandler = VNImageRequestHandler(cmSampleBuffer: sampleBuffer, orientation: .down)
         
-        // 2
+        // 2. 构造文本识别算法请求
         let request = VNRecognizeTextRequest(completionHandler: textDetectHandler)
         do {
             try requestHandler.perform([request])
@@ -279,13 +203,13 @@ extension ViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
     }
     
     func textDetectHandler(request: VNRequest, error: Error?) {
-        // 3
+        // 3. 文本识别请求的结果
         guard let observations = request.results as? [VNRecognizedTextObservation] else { return }
         let recognizedStrings = observations.compactMap { observation in
-            // 4
+            // 4. 返回按置信度降序排序的第 1 个候选者
             return observation.topCandidates(1).first?.string
         }
-        // 5
+        // 5. 更新 UI
         DispatchQueue.main.async {
             if let text = recognizedStrings.first {
                 self.textView.text += text
@@ -295,19 +219,13 @@ extension ViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
 }
 ```
 
-1. 创建一个请求处理程序，该处理程序对样本缓冲区中包含的图像执行请求；
-2. 构造文本识别算法请求；
-3. 文本识别请求的结果；
-4. 返回按置信度降序排序的第 1 个候选者；
-5. 更新 UI。
-
 以上就是使用 AVFoundation 和 Vision 进行数据扫描的简短介绍和 Demo 实现。
 
 ## 进入正题 ：VisionKit
 
-### 介绍
+### 介绍 VisionKit 方案
 
-在 iOS 16 中，Apple 提供了另一个新选项可以为我们封装所有这些。在 VisionKit 框架中引入 `DataScannerViewController`。它结合了 AVFoundation 和 Vision 的特性，专门用于数据扫描。 DataScannerViewController 可以进行**实时相机预览、有用的指导标签、项目突出显示**、**点击聚焦**、**捏拉缩放**等。
+在 iOS 16 中，Apple 提供了另一个新选项可以为我们封装所有这些。在 VisionKit 框架中引入 `DataScannerViewController`。它结合了 AVFoundation 和 Vision 的特性，专门用于数据扫描。 DataScannerViewController 可以进行**实时相机预览、有用的指导标签、项目突出显示**、**点击聚焦**、**捏拉缩放**等。有着作为原生能力的系统统一体验。
 
 ![](https://raw.githubusercontent.com/LLLLLayer/picture-bed/main/img/wwdc22/session10025/datascanner_viewcontroller.png)
 
@@ -315,7 +233,9 @@ extension ViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
 
 常规来讲，对于我们的应用程序来说，数据扫描只是其功能的一小部分。但它可能需要大量代码。使用 `DataScannerViewController`，其为我们执行常见任务，我们可以将时间集中在其它地方。接下来，我们将尝试其添加到我们的应用程序中。
 
-### 使用
+> 这里需要注意的是 `DataScannerViewController` 是 Swift Only 的，Objective-C 并不支持。
+
+### 使用 VisionKit 方案
 
 #### 隐私权限使用
 
@@ -331,7 +251,7 @@ extension ViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
 import VisionKit
 ```
 
-接下来，由于并非所有设备都支持数据扫描，因此使用 `isSupported` 类属性来隐藏任何相关功能的按钮或菜单，这样用户就不会看到他们无法使用的东西。任何 2018 年及后续的配备 Apple 神经引擎的的 iPhone 和 iPad 设备都支持数据扫描。
+接下来，由于并非所有设备都支持数据扫描，因此使用 `isSupported` 类属性来隐藏任何相关功能的按钮或菜单，这样用户就不会看到他们无法使用的东西。任何 2018 年及后续的配备 Apple 神经引擎的 iPhone（iPhone XS、iPhone XS Max、iPhone XR 及后续设备）和 iPad 设备（iPad Pro 2018 及后续设备）都支持数据扫描。
 
 ```swift
 DataScannerViewController.isSupported
@@ -380,7 +300,7 @@ let dataScanner = DataScannerViewController(recognizedDataTypes: recognizedDataT
 // 指定要识别的数据类型
 let recognizedDataTypes: Set<DataScannerViewController.RecognizedDataType> = [
     .barcode(symbologies:[.qr]),
-    .text(textContentType: . URL) 
+    .text(textContentType: .URL) 
 ]
 
 // 创建数据扫描仪
@@ -412,7 +332,7 @@ let dataScanner = DataScannerViewController (recognizedDataTypes: recognizedData
 
 当然，这在未来可能会再次改变。所以使用 `supportedTextRecognitionLanguages` 类属性来检索最新的列表。
 
-```
+```swift
 DataScannerViewController.supportedTextRecognitionLanguages
 ```
 
@@ -443,11 +363,17 @@ present(dataScanner, animated: true) {
 退后一步，我们花一些时间来研究一下 DataScanner 的初始化参数。我们在这里使用了一个 `recognizedDataTypes`。还有其他一些方法可以帮助我们定制应用程序的体验。我们逐一来看。
 
 -   **recognizedDataTypes**：允许我们指定要识别的数据类型。文本、机器可读代码以及每种代码的类型。
+
 -   **qualityLevel：** 使用 ****balanced、fast 或者 accurate。例如，在阅读项目上，使用 “fast” 来牺牲分辨率从而提升速度。 accurate 将为我们提供最佳的准确性，即使遇到 micro QR 码或小序列号等小物品，也可以非常从容。大多时候，更建议使用 balanced。
+
 -   **recognizesMultipleItems：** 让我们可以选择查找一个或多个项目，比如我们想一次扫描多个条形码一样。当它为 false 时，默认情况下会识别最中心的项目，除非用户点击其他地方。
+
 -   **isHighFrameRateTrackingEnabled** 绘制高光时启用高帧率跟踪。当相机移动或场景变化时，它允许高光尽可能紧跟已经被扫描到的项目。
+
 -   **isPinchToZoomEnabled** 我们可以自行修改缩放级别。
+
 -   **isGuidanceEnabled** 是否在屏幕顶部显示标签以指导用户。
+
 -   **isHighlightingEnabled** 我们可以启用系统提供的突出显示，或者我们可以禁用它来绘制自定义突出显示。
 
 #### 提取已识别项目
@@ -495,7 +421,10 @@ func dataScanner(_ dataScanner: DataScannerViewController, didTapOn item: Recogn
 有关 `RecognizedItem` 还有两件事：
 
 1. 每个已识别的项目都有一个唯一标识符，我们可以使用它来跟踪项目的整个生命周期。该生命周期从第一次看到该项目开始，到不再出现时结束。
+
 2. 每个 `RecognizedItem` 都有一个 `bounds` 属性。 `bounds` 不是 `frame`，它由四个点组成，每个角一个点。
+
+> 这里的 `bounds` 是一个结构体，提供 `topLeft`、`topRight`、`bottomRight`、`bottomLeft` 四个属性，与上文提到的 `AVMetadataMachineReadableCodeObject` 的属性 `var corners: [CGPoint]` 相比，有更加明确的语义。
 
 ![](https://raw.githubusercontent.com/LLLLLayer/picture-bed/main/img/wwdc22/session10025/recognized_item.png)
 
@@ -602,7 +531,7 @@ func updateViaAsyncStream() async {
 }
 ```
 
-### Demo
+### VisionKit 方案 Demo
 
 > 具体代码实现同上部分“使用”内容，本部分不进行代码分解。
 
