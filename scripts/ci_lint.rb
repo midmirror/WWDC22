@@ -67,7 +67,7 @@ else
 end
 
 begin
-  type = has_error ? 0 : 1
+  type = has_error ? 1 : 0
   response = Helper.send_group_message(message, session_ids, type)
   puts response.status, response.body
 

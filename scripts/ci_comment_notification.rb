@@ -22,7 +22,7 @@ end
 comment_sender = ENV['COMMENT_SENDER']
 
 message = ""
-comment_from_pr_author = pull_request_author != comment_sender
+comment_from_pr_author = pull_request_author == comment_sender
 if comment_from_pr_author
   message = "PR 有新的审核留言，请尽快查阅。 #{pull_request_url}"
 else
@@ -30,7 +30,7 @@ else
 end
 
 begin
-  type = comment_from_pr_author ? 1 : 0
+  type = comment_from_pr_author ? 0 : 1
   response = Helper.send_group_message(message, session_ids, type)
   puts response.status, response.body
   response_data = JSON.parse response.body
