@@ -51,7 +51,7 @@ VisionKit 是 Apple 在 iOS 13 中引入的框架，为 iOS 提供了图像和�
   - WWDC 2021 Session “[Extract document data using Vision](https://developer.apple.com/videos/play/wwdc2021/10041/)”，了解 Vision 如何提供专业的图像识别和分析，实现从文档中提取信息、识别多语言文本及条码；
 
   - 老司机技术周报 WWDC21 内参 “[使用 Vision 提取文档里的数据](https://xiaozhuanlan.com/topic/6204139578)”。
-    
+
 我们将从历史方案开始。
 
 ## 历史方案 1：AVFoundation
