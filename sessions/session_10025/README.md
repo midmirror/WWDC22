@@ -2,7 +2,7 @@
 session_ids: [10025]
 ---
 
-# Session 10025 - 使用 VisionKit 捕获机器可读的代码和文本
+# Session 10025 - VisionKit 的 OCR 解决方案，更便捷的捕获文本与条码
 
 本文基于 [Session 10025](https://developer.apple.com/videos/play/wwdc2022/10025/) 梳理。
 
@@ -10,25 +10,49 @@ session_ids: [10025]
 >
 > 审核：
 
-## 内容概述：DataScanner
-
-本文将与大家一同认识 VisionKit 中的 DataScanner。该框架结合了 AVCapture 和 Vision，可通过简单的 Swift API 来实时的捕获机器可读的代码和文本。我们将展示如何通过「指定条形码符号」或「选择语言类型」来控制应用程序可以捕获的内容。我们还将探讨如何在应用中同时启用指导、显示自定义项目或突出显示感兴趣区域，以及在应用检测到项目后的交互处理。
-
-> 有关静止的图像或暂停的视频帧与实时文本交互的更多信息，请观看来自 WWDC22 的另一个 Session “[Add Live Text interaction to your app](https://developer.apple.com/videos/play/wwdc2022/10026/)”。
-
-## 相关背景：VisionKit
-
-VisionKit 是 Apple 在 iOS 13 中引入的新框架，提供了图像和 iOS 摄像头的实时视频中的文本和结构化数据的检测。使用 VisionKit，则无需开发者手动的调整输入或进行检测，这些都会交给 VisionKit 处理。开发者可以专注于应用程序的其他部分。
-
-> 了解 VisionKit 的详细内容请参考 [VisionKit Documentation](https://developer.apple.com/documentation/visionkit)
-
-## 引入问题：数据扫描
-
-我们将讨论如何从视频源中捕获设备可读的代码和文本，或者称之为数据扫描。 这里所说的「数据扫描」到底是指什么？这是一种使用传感器（如相机）读取数据的方式。通常，这些数据以文本的形式出现。 例如，包含电话号码、日期和价格等信息的收据。数据还可以是机器可读的代码，比如无处不在的二维码。 
+## 需求场景：数据识别与扫描
 
 ![](https://raw.githubusercontent.com/LLLLLayer/picture-bed/main/img/wwdc22/session10025/data_scanner.png)
 
-我们以前肯定使用过数据扫描仪，可能是“相机”应用程序，或者使用 iOS 15 中引入的实时文本功能。更或者在日常生活中使用过的开发商自定义扫描的应用程序。 作为开发者，如果我们必须构建自己的数据扫描仪怎么办？ iOS SDK 为我们提供了不止一种解决方案，具体取决于我们的需求。
+如今，光学字符识别（Optical Character Recognition，OCR）不断地发展，文本、条码等的识别和扫描应用也广泛普及。特别是移动终端设备的识别与扫描应用，越来越成为我们生活中不可或缺的一部分。对着文件扫一扫，就可以轻松录入为电子数据；对着商品上的二维码扫一扫，就可以方便的了解商品信息、进行支付交易等。
+
+我们不拘泥于计算机科学上的定义，可以将这里所说的「数据识别与扫描」认为是读取来自于 iOS 设备相机提供的视频源中的文本、条码数据。我们可以将应用程序的这类功能称为“数据扫描仪”。
+
+作为开发者，我们应如果构建自己的数据扫描仪？iOS SDK 为我们提供了多种解决方案，具体取决于我们的需求。我们将专注于如何实现这一功能。
+
+## 内容概述：DataScanner
+
+![](https://raw.githubusercontent.com/LLLLLayer/picture-bed/main/img/wwdc22/session10025/recognized_item.png)
+
+本文将与大家一同认识 VisionKit 中的 `DataScannerViewController`。它结合了 AVCapture 和 Vision，通过简单的 Swift API 来实时的捕获视频源中的文本、条码。我们将展示如何通过「指定条码符号」或「选择语言类型」来控制应用程序可以捕获的内容，还将探讨如何同时在应用中启用用户指导、显示自定义项目、突出显示感兴趣区域，以及应用程序检测到项目后的处理与用户交互。同时，我们提供了其他方案的 Demo 来进行对比，从而更深入了解这些方案的差异。
+
+## 相关背景：Vision & VisionKit
+
+![](https://raw.githubusercontent.com/LLLLLayer/picture-bed/main/img/wwdc22/session10025/vision.png)
+
+Vision 是 Apple 在 iOS 11 中引入的框架，框架提供人脸和人脸特征检测、文本检测、条码识别、图像配准和一般特征跟踪等能力。Vision 还允许将自定义 Core ML 模型用于分类或对象检测等任务。
+
+VisionKit 是 Apple 在 iOS 13 中引入的框架，为 iOS 提供了图像和实时视频中的文本、结构化数据的检测功能。我们可以认为 VisionKit 是 Vision 的进一步封装，提供了一系列开箱即用的 API。使用 VisionKit，开发者无需手动的调整输入或进行检测，这些都会交给 VisionKit 处理。
+
+- 有关静止的图像或暂停的视频帧与实时文本交互的更多信息，请观看来自 WWDC22 的另一个 Session “[Add Live Text interaction to your app](https://developer.apple.com/videos/play/wwdc2022/10026/)”。
+
+- 其他相关资料可以参考：
+
+    - [Vision Documentation](https://developer.apple.com/documentation/vision);
+
+    - [visionkit Documentation](https://developer.apple.com/documentation/visionkit);
+
+    - WWDC 2019 讲座 “[Understanding Images in Vision Framework](https://developer.apple.com/videos/play/wwdc2019/222/)”，了解 Vision 在图像分类、图像显著性、图像确定及面部捕捉质量评分等方面的改进；
+
+    - WWDC 2019 讲座 “[Text Recognition in Vision Framework](https://developer.apple.com/videos/play/wwdc2019/234/)”，了解如何在应用程序中利用内置的机器学习技术，快速、准确的处理字符、语言的识别，以及它们之间的差异；
+
+    - WWDC 2020 Session “[Explore Computer Vision APIs](https://developer.apple.com/videos/play/wwdc2020/10673/)”，了解如何将结合 Core Image、Vision 和 Core ML 的强大功能的计算机视觉智能引入我们的应用程序；
+
+    - WWDC 2021 Session “[Extract document data using Vision](https://developer.apple.com/videos/play/wwdc2021/10041/)”，了解 Vision 如何提供专业的图像识别和分析，实现从文档中提取信息、识别多语言文本及条码；
+
+    - 老司机技术周报 WWDC21 内参 “[使用 Vision 提取文档里的数据](https://xiaozhuanlan.com/topic/6204139578)”。
+    
+我们将从历史方案开始。
 
 ## 历史方案 1：AVFoundation
 
@@ -36,7 +60,7 @@ VisionKit 是 Apple 在 iOS 13 中引入的新框架，提供了图像和 iOS �
 
 ![](https://raw.githubusercontent.com/LLLLLayer/picture-bed/main/img/wwdc22/session10025/avfoundation_flow_chart.png)
 
-一种选择是我们可以使用 AVFoundation 框架。如图所示，将设备（AVCaptureDevice）输入（AVCaptureDevicelnput）和设备输出（AVCaptureMetadataOutput），连接到会话（AVCaptureSession），并对其进行配置（AVCaptureConnection）,生成扫描数据（AVMetadataObjects）。
+一种选择是我们可以使用 AVFoundation 框架。如图所示，将设备输入和设备输出，连接到会话，并对其进行配置，运行后生成扫描数据。
 
 ### 方案 1 Demo
 
@@ -140,17 +164,19 @@ extension ViewController: AVCaptureMetadataOutputObjectsDelegate {
 }
 ```
 
-> 这里只取 `metadataObjects.first` 只是 Demo 的偷懒方法，例如微信会提示多个扫码结果，欢迎读者对该部分进行深入尝试。另外，AVMetadataMachineReadableCodeObject 的属性有 `var corners: [CGPoint]` 也可用于开发者绘制突出显示。但与 `DataScannerViewController` 提供的能力有一些差异，我们在后文将进行对比。
+> 这里只取 `metadataObjects.first` 只是 Demo 的偷懒方法，例如微信会提示多个扫码结果，欢迎读者对该部分进行深入尝试。
+>
+> AVMetadataMachineReadableCodeObject 的属性有 `var corners: [CGPoint]` 也可用于开发者绘制突出显示。但与 `DataScannerViewController` 提供的能力有一些差异，我们在后文将进行对比。
+>
+> 此外， `AVMetadataObject.ObjectType` 还可用于标识 Body（包括 humanBody、dogBody、dogBody）、Face 等原数据，可以参考文档 “[AVMetadataObject.ObjectType](https://developer.apple.com/documentation/avfoundation/avmetadataobject/objecttype)”。
 
-## 历史方案 2：AVFoundation & Vision 
+## 历史方案 2：AVFoundation & Vision
 
 ### 方案 2 介绍
 
 ![](https://raw.githubusercontent.com/LLLLLayer/picture-bed/main/img/wwdc22/session10025/avfoundation_and_vision_flow_chart.png)
 
-如果我们还想捕获文本，另一种选择是将 AVFoundation 和 Vision 框架结合在一起。在此图中，我们创建的不是元数据输出，而是视频数据输出（AVCaptureVideoDataOutput）。视频数据输出导致样本缓冲区的交付（CMSampleBufferRef），这些缓冲区可以给到 VisionKit 以用于文本和条形码识别请求，通过创建一个请求处理程序（VNImageRequestHandler），调用相关算法（VNDetectBarcodesRequest、VNRecognizeTextRequest），从而产生 VisionObservation（VNBarcodeObservation、VNRecognizedTextObservation）。
-
-> 有关使用 Vision 进行数据扫描的更多信息，请查看 WWDC21 中的 “[Extract document data using Vision](https://developer.apple.com/videos/play/wwdc2021/10041/)”。
+如果我们还想捕获文本，另一种选择是将 AVFoundation 和 Vision 框架结合在一起。在此图中，我们构建的不是元数据输出，而是视频数据输出。视频数据输出交付到样本缓冲区，这些缓冲区可以给到 VisionKit 用于文本和条形码识别请求，通过创建一个请求处理程序，调用相关算法，从而产生分析结果。
 
 ### 方案 2 Demo
 
@@ -162,7 +188,7 @@ extension ViewController: AVCaptureMetadataOutputObjectsDelegate {
 
 **代码分解**
 
-这部分我们重点关注与方案 1 的不同点，output 的类型使用 `AVCaptureVideoDataOutput` 而不是 `AVCaptureMetadataOutput`：
+这部分我们重点关注与方案 1 的不同点，`output` 的类型使用 `AVCaptureVideoDataOutput` 而不是 `AVCaptureMetadataOutput`：
 
 ```swift
 class ViewController: UIViewController {
@@ -190,11 +216,20 @@ class ViewController: UIViewController {
 ```swift
 extension ViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        // 1. 创建一个请求处理程序，该处理程序对样本缓冲区中包含的图像执行请求
-        let requestHandler = VNImageRequestHandler(cmSampleBuffer: sampleBuffer, orientation: .down)
+        guard let cvPixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
+            return
+        }
         
-        // 2. 构造文本识别算法请求
+        // 1. 构造文本识别算法请求
         let request = VNRecognizeTextRequest(completionHandler: textDetectHandler)
+        
+        // 2. 请求的语言支持、质量等级、语言矫正
+        request.recognitionLanguages = ["en-US"]
+        request.recognitionLevel = .accurate
+        request.usesLanguageCorrection = true
+        
+        // 3. 创建并执行一个请求处理程序，该处理程序对样本缓冲区中包含的图像执行请求
+        let requestHandler = VNImageRequestHandler(cvPixelBuffer: cvPixelBuffer, orientation: .up, options: [:])
         do {
             try requestHandler.perform([request])
         } catch {
@@ -203,13 +238,14 @@ extension ViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
     }
     
     func textDetectHandler(request: VNRequest, error: Error?) {
-        // 3. 文本识别请求的结果
+        // 4. 文本识别请求的结果
         guard let observations = request.results as? [VNRecognizedTextObservation] else { return }
         let recognizedStrings = observations.compactMap { observation in
-            // 4. 返回按置信度降序排序的第 1 个候选者
-            return observation.topCandidates(1).first?.string
+            // 5. 返回按置信度降序排序的第 1 个候选者
+            print(observation.topCandidates(1).first?.string ?? "" + "\n")
+            return observation.topCandidates(1).first?.string ?? "" + "\n"
         }
-        // 5. 更新 UI
+        // 6. 更新 UI
         DispatchQueue.main.async {
             if let text = recognizedStrings.first {
                 self.textView.text += text
@@ -219,19 +255,23 @@ extension ViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
 }
 ```
 
-以上就是使用 AVFoundation 和 Vision 进行数据扫描的简短介绍和 Demo 实现。
+以上两部分就是使用 AVFoundation 和 Vision 进行数据扫描的简短介绍和 Demo 实现。
 
 ## 进入正题 ：VisionKit
 
 ### 介绍 VisionKit 方案
 
-在 iOS 16 中，Apple 提供了另一个新选项可以为我们封装所有这些。在 VisionKit 框架中引入 `DataScannerViewController`。它结合了 AVFoundation 和 Vision 的特性，专门用于数据扫描。 DataScannerViewController 可以进行**实时相机预览、有用的指导标签、项目突出显示**、**点击聚焦**、**捏拉缩放**等。有着作为原生能力的系统统一体验。
+在 iOS 16 中，Apple 提供了另一个新的选项可以为我们封装需要的功能。在 VisionKit 框架中引入了 `DataScannerViewController`。它结合了 AVFoundation 和 Vision 的特性，专门用于数据识别与扫描。 `DataScannerViewController` 可以实现**实时相机预览、展示用户指导标签、识别到的项目进行突出显示**、**点击聚焦**以及**捏拉缩放**等，有着作为原生能力的系统统一体验。
 
 ![](https://raw.githubusercontent.com/LLLLLayer/picture-bed/main/img/wwdc22/session10025/datascanner_viewcontroller.png)
 
-`DataScannerViewController` 是 `UIViewController` 的子类。识别到的项目的坐标始终位于视图坐标中，我们无需从图像空间转换为视觉坐标，再转换为视图坐标。我们还可以通过指定在视图坐标中的感兴趣区域，来限制视图的活动部分。对于文本识别，我们可以指定内容类型来限制找到的文本类型。对于机器可读的代码，可以准确指定要查找的符号或类型。
+`DataScannerViewController` 是 `UIViewController` 的子类。识别到的项目的坐标始终位于视图坐标中，我们无需从图像空间转换为视觉坐标，再转换为视图坐标。我们还可以通过指定在视图坐标中的感兴趣区域，来限制视图的活动部分。对于文本识别，我们可以指定内容类型来进行识别限制。对于条码，可以准确指定要查找的符号或类型。
 
-常规来讲，对于我们的应用程序来说，数据扫描只是其功能的一小部分。但它可能需要大量代码。使用 `DataScannerViewController`，其为我们执行常见任务，我们可以将时间集中在其它地方。接下来，我们将尝试其添加到我们的应用程序中。
+> 这里提到的坐标转换是与 Vision 进行对比，Vision 会为我们提供一个 `VNRecognizedObjectObservation`，继承自 `VNDetectedObjectObservation` ，包含一个 `boundingBox` 属性，带有被检测对象的边界框坐标。`boundingBox` 中的坐标被归一化，意味着 x、y、宽度和高度都是 0.0 到 1.0 之间的小数，同时原点 (0,0) 在左下角，这些都需要开发者进行转换。
+>
+> ![](https://raw.githubusercontent.com/LLLLLayer/picture-bed/main/img/wwdc22/session10025/coordinates.png)
+
+对于应用程序来说，数据扫描与识别可能只是其业务功能的一小部分，但需要开发者使用大量代码来实现该功能。使用 `DataScannerViewController`，让它为我们处理常见的数据扫描与识别任务，我们可以将精力集中在程序的其它地方。接下来，我们将尝试其添加到我们的应用程序中。
 
 > 这里需要注意的是 `DataScannerViewController` 是 Swift Only 的，Objective-C 并不支持。
 
@@ -239,7 +279,7 @@ extension ViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
 
 #### 隐私权限使用
 
-和上述 Demo 一致，当应用程序尝试捕获视频时，iOS 会要求用户授予程序访问相机的明确权限。我们需要提供一条描述性消息来表明应用程序需求。为此，请在应用的 Info.plist 文件中添加“Privacy - Camera Usage Description”。尽可能具有描述性，以便用户知道他们了解应用程序将使用什么。
+和上述 Demo 一致，当应用程序尝试捕获视频时，iOS 会要求用户授予程序访问相机的明确权限。我们需要提供一条描述性消息来表明应用程序需求。请在应用的 Info.plist 文件中添加“Privacy - Camera Usage Description”。尽可能具有描述性，以便用户知道他们了解应用程序将使用什么。
 
 ![](https://raw.githubusercontent.com/LLLLLayer/picture-bed/main/img/wwdc22/session10025/camera_ssage_description.png)
 
@@ -251,13 +291,13 @@ extension ViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
 import VisionKit
 ```
 
-接下来，由于并非所有设备都支持数据扫描，因此使用 `isSupported` 类属性来隐藏任何相关功能的按钮或菜单，这样用户就不会看到他们无法使用的东西。任何 2018 年及后续的配备 Apple 神经引擎的 iPhone（iPhone XS、iPhone XS Max、iPhone XR 及后续设备）和 iPad 设备（iPad Pro 2018 及后续设备）都支持数据扫描。
+接下来，由于并非所有设备都支持数据扫描，因此 `isSupported` 类属性可以为应用程序隐藏功能入口。任何 2018 年及后续的配备 Apple 神经引擎的 iPhone（iPhone XS、iPhone XS Max、iPhone XR 及后续设备）和 iPad 设备（iPad Pro 2018 及后续设备）都支持该功能。
 
 ```swift
 DataScannerViewController.isSupported
 ```
 
-我们还需要检查可用性。除了用户批准应用程序访问相机，设备还需要不受任何限制。例如在屏幕时间的内容和隐私限制中设置的相机访问没有限制。满足这些条件，我们则可以进行扫描。
+我们还需要检查可用性。除了用户批准应用程序访问相机，应用程序还需要不受任何限制。例如在屏幕时间的内容和隐私限制中，将相机的访问设置为没有限制。满足这些条件，我们则可以进行扫描。
 
 ```swift
 DataScannerViewController.isAvailable
@@ -274,14 +314,15 @@ DataScannerViewController.isAvailable
 ```swift
 // 指定要识别的数据类型
 let recognizedDataTypes: Set<DataScannerViewController.RecognizedDataType> = [
- .barcode(symbologies:[.qr]),   .text() 
+ .barcode(symbologies:[.qr]),
+ .text() 
 ]
 
 // 创建数据扫描仪
 let dataScanner = DataScannerViewController(recognizedDataTypes: recognizedDataTypes)
 ```
 
-我们可以选择传递语言列表，供文本识别器用作语言校正等方面的提示。如果我们想支持多种语言，请将它们加入到其中。如果我们不提供任何语言，其默认使用设备当前的语言。
+我们可以传递语言列表，作语言校正等方面的提示。如果我们想支持多种语言，可以将它们加入到其中。如果我们不提供任何语言，其默认使用设备当前的语言。
 
 ```swift
 // 指定要识别的数据类型
@@ -289,9 +330,6 @@ let recognizedDataTypes: Set<DataScannerViewController.RecognizedDataType> = [
     .barcode(symbologies:[.qr]),
     .text(languages: ["ja"]) 
 ]
-
-// 创建数据扫描仪
-let dataScanner = DataScannerViewController(recognizedDataTypes: recognizedDataTypes)
 ```
 
 我们还可以请求特定的文本内容类型。在此示例中，希望扫描仪查找 URL。
@@ -302,12 +340,9 @@ let recognizedDataTypes: Set<DataScannerViewController.RecognizedDataType> = [
     .barcode(symbologies:[.qr]),
     .text(textContentType: .URL) 
 ]
-
-// 创建数据扫描仪
-let dataScanner = DataScannerViewController(recognizedDataTypes: recognizedDataTypes)
 ```
 
-现在我们已经说明了要识别的数据类型，可以继续创建 DataScanner 实例。
+现在我们已经说明了要识别的数据类型，可以继续创建 `dataScanner` 实例。
 
 ```swift
 // 指定要识别的数据类型
@@ -317,20 +352,20 @@ let recognizedDataTypes: Set<DataScannerViewController.RecognizedDataType> = [
 ]
 
 // 创建数据扫描仪
-let dataScanner = DataScannerViewController (recognizedDataTypes: recognizedDataTypes) 
+let dataScanner = DataScannerViewController(recognizedDataTypes: recognizedDataTypes) 
 ```
 
 在前面的示例中，我们指定了条形码符号系统、识别语言和文本内容类型。我们来看看其他选项。
 
-对于条码符号，其支持与 Vision 条码检测器相同的符号。
+对于条码符号，其支持与 Vision 条码检测器同的符号。
 
 ![](https://raw.githubusercontent.com/LLLLLayer/picture-bed/main/img/wwdc22/session10025/recognized_data_type_1.png)
 
-在语言方面，作为 LiveText 功能的一部分，`DataScannerViewController` 支持完全相同的语言。在 iOS 16 中，Apple 正在添加对日语和韩语的支持。
+在语言方面，作为 Live Text 功能的一部分，`DataScannerViewController` 支持完全相同的语言。在 iOS 16 中，Apple 会添加对日语和韩语的支持。
 
 ![](https://raw.githubusercontent.com/LLLLLayer/picture-bed/main/img/wwdc22/session10025/recognized_data_type_2.png)
 
-当然，这在未来可能会再次改变。所以使用 `supportedTextRecognitionLanguages` 类属性来检索最新的列表。
+当然，这在未来可能会继续有新语言加入。可以使用 `supportedTextRecognitionLanguages` 类属性来检索最新的列表。
 
 ```swift
 DataScannerViewController.supportedTextRecognitionLanguages
@@ -342,7 +377,7 @@ DataScannerViewController.supportedTextRecognitionLanguages
 
 #### 展示数据扫描仪
 
-我们现在已经准备好向用户展示 DataScanner。像任何其他 `ViewController` 一样 `Present`，它将全屏显示，或者使用 `Sheet`，或者将其完全添加到另一个 `View` 中。完全取决于我们的需求。之后，当 `Present` 完成后，调用 `startScanning()` 开始查找数据。
+我们现在已经准备好展示 `dataScanner`。像任何其他 `ViewController` 一样 `Present`，它将全屏显示，或者使用 `Sheet`，或者将其完全添加到另一个 `View` 中，完全取决于我们的需求。当 `Present` 完成后，调用 `startScanning()` 开始查找数据。
 
 ```swift
 // 指定要识别的数据类型
@@ -356,31 +391,31 @@ let dataScanner = DataScannerViewController(recognizedDataTypes: recognizedDataT
 
 // 展示数据扫描仪
 present(dataScanner, animated: true) {
-    try?  dataScanner.startScanning() 
+    try? dataScanner.startScanning() 
 }
 ```
 
-退后一步，我们花一些时间来研究一下 DataScanner 的初始化参数。我们在这里使用了一个 `recognizedDataTypes`。还有其他一些方法可以帮助我们定制应用程序的体验。我们逐一来看。
+我们花一些时间来研究一下 `dataScanner` 的初始化参数。我们在这里使用了一个 `recognizedDataTypes`。还有其他一些方法可以帮助我们定制应用程序的体验，我们逐一来看：
 
--   **recognizedDataTypes**：允许我们指定要识别的数据类型。文本、机器可读代码以及每种代码的类型。
+- **`recognizedDataTypes`** 允许我们指定要识别的数据类型。文本、条码及其类型。
 
--   **qualityLevel：** 使用 ****balanced、fast 或者 accurate。例如，在阅读项目上，使用 “fast” 来牺牲分辨率从而提升速度。 accurate 将为我们提供最佳的准确性，即使遇到 micro QR 码或小序列号等小物品，也可以非常从容。大多时候，更建议使用 balanced。
+- **`qualityLevel`** 使用 `balanced`、`fast` 或者 `accurate`。例如，在阅读项目上，使用 `fast` 来牺牲分辨率从而提升速度。 `accurate` 将为我们提供最佳的准确性，即使遇到 micro QR 码等小物品，也可以非常从容。大多时候，更建议使用 `balanced`。
 
--   **recognizesMultipleItems：** 让我们可以选择查找一个或多个项目，比如我们想一次扫描多个条形码一样。当它为 false 时，默认情况下会识别最中心的项目，除非用户点击其他地方。
+- **`recognizesMultipleItems`** 让我们可以选择查找一个或多个项目，比如我们想一次扫描多个条形码一样。当它为 `false` 时，默认情况下会识别最中心的项目，除非用户点击其它地方。
 
--   **isHighFrameRateTrackingEnabled** 绘制高光时启用高帧率跟踪。当相机移动或场景变化时，它允许高光尽可能紧跟已经被扫描到的项目。
+- **`isHighFrameRateTrackingEnabled`** 绘制高光时启用高帧率跟踪。当相机移动或场景变化时，它允许高光尽可能紧跟已经被扫描到的项目。
 
--   **isPinchToZoomEnabled** 我们可以自行修改缩放级别。
+- **`isPinchToZoomEnabled`** 我们可以自行修改缩放级别。
 
--   **isGuidanceEnabled** 是否在屏幕顶部显示标签以指导用户。
+- **`isGuidanceEnabled`** 是否在屏幕顶部显示指导用户的标签。
 
--   **isHighlightingEnabled** 我们可以启用系统提供的突出显示，或者我们可以禁用它来绘制自定义突出显示。
+- **`isHighlightingEnabled`** 我们可以启用系统提供的突出显示，或者我们可以禁用它来绘制自定义的突出显示。
 
 #### 提取已识别项目
 
 我们已经了解如何展示数据扫描仪，那么让我们来谈谈我们将如何提取已识别的项目，以及如何绘制自定义高光。
 
-首先，为 dataScanner 提供一个委托。
+首先，为 `dataScanner` 提供一个委托：
 
 ```swift
 // 检索支持语言列表
@@ -401,7 +436,7 @@ present(dataScanner, animated: true) {
 }
 ```
 
-有了委托，我们可以实现 dataScanner 的 `didTapOn` 方法，该方法在用户点击项目时调用。有了它，我们将收到新类型 `RecognizeItem` 的实例。 `RecognizedItem` 是一个枚举，它保存文本或条形码作为关联值。
+有了委托，我们可以实现 `dataScanner` 的 `didTapOn` 方法，该方法在用户点击项目时调用。有了它，我们将收到新类型 `RecognizeItem` 的实例。 `RecognizedItem` 是一个枚举，它保存文本或条形码作为关联值。
 
 ```swift
 func dataScanner(_ dataScanner: DataScannerViewController, didTapOn item: RecognizedItem) {
@@ -426,13 +461,11 @@ func dataScanner(_ dataScanner: DataScannerViewController, didTapOn item: Recogn
 
 > 这里的 `bounds` 是一个结构体，提供 `topLeft`、`topRight`、`bottomRight`、`bottomLeft` 四个属性，与上文提到的 `AVMetadataMachineReadableCodeObject` 的属性 `var corners: [CGPoint]` 相比，有更加明确的语义。
 
-![](https://raw.githubusercontent.com/LLLLLayer/picture-bed/main/img/wwdc22/session10025/recognized_item.png)
-
 #### 已识别项目的变化
 
 我们来看看屏幕中识别到的项目发生变化时，调用的三个相关委托方法。
 
-第一个是 didAdd，当场景中的项目被新识别时调用。如果我们想创建自己的自定义高光，可以在此处为每个新项目创建一个 `highLightView`。我们可以使用项目的 ID 来跟踪亮点。并且将 `highLightView` 添加到添加到 DataScanner 的 `overlayContainerView`，以便它们出现在相机预览上方。
+第一个是 `didAdd`，当场景中的项目被新识别时调用。如果我们想创建自定义高光，可以在此处为每个新项目创建一个 `highLightView`。我们可以使用项目的 `ID` 来跟踪亮点。并且将 `highLightView` 添加到添加到 `dataScanner` 的 `overlayContainerView`，使其出现在相机预览上。
 
 ```swift
 // 存储我们的自定义 HighlightView 的字典，其关联的项目 ID 作为 Key 值
@@ -448,7 +481,7 @@ func dataScanner(_ dataScanner: DataScannerViewController, didAdd addedItems: [R
 }
 ```
 
-下一个委托方法是 `didUpdate`，它在项目移动或相机移动、以及识别到的文本到转录发生变化时被调用（扫描仪看到文本的时间越长，它的转录就越准确）。使用更新项目中的 ID 从我们刚刚创建的字典中检索我们的 `highLightView`，然后将视图动画化到它们新更新的 `bounds`。
+下一个委托方法是 `didUpdate`，它在项目移动或相机移动、以及识别到的文本到转录发生变化时被调用（扫描仪看到文本的时间越长，它的转录就越准确）。使用更新项目中的 `ID` 从我们刚刚创建的字典中检索我们的 `highLightView`，然后将视图动画化到它们新更新的 `bounds`。
 
 ```swift
 // 动画方式将 HighlightView 移动到新 bounds
@@ -474,7 +507,7 @@ func dataScanner(_ dataScanner: DataScannerViewController, didRemove removedItem
 }
 ```
 
-总之，如果我们在项目上绘制自己的突出显示，这三个委托方法对于我们控制动画高光进入场景、动画它们的移动和动画它们是至关重要的。对于这三个前面的委托方法中的每一个，我们还将获得一个包含当前识别的所有项目的数组。这对于文本识别可能会派上用场，因为这些项目按其自然阅读顺序放置。
+总之，如果我们在项目上绘制自定义的突出显示，这三个委托方法对于我们控制动画高光入场、移动和删除，是至关重要的。对于这三个前面的委托方法中的每一个，我们还将获得一个包含当前识别的所有项目的数组。这对于文本识别可能会派上用场，比如这些项目按自然阅读顺序放置。
 
 ```swift
 /// Called when the the scanner recognizes new items in the scene.
@@ -499,7 +532,7 @@ func dataScanner(_ dataScanner: DataScannerViewController, didUpdate updatedItem
 func dataScanner(_ dataScanner: DataScannerViewController, didRemove removedItems: [RecognizedItem], allItems : [ RecognizedItem ]) 
 ```
 
-这是如何使用 `DataScannerViewController` 的概述。
+以上是如何使用 `DataScannerViewController` 的概述。
 
 #### 其他功能
 
@@ -511,7 +544,7 @@ if let image = try? await dataScanner.capturePhoto()
 UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
 ```
 
-如果我们不创建自定义突出显示，则可能不需要上一部分的三个委托方法。相反，我们可以使用 `RecognizedItem` 属性。它是一个 `AsyncStream`，会随着场景的变化而不断更新。
+如果我们不创建自定义突出显示，就可能不需要上一部分的三个委托方法。我们可以使用 `RecognizedItem` 属性。它是一个 `AsyncStream`，会随着场景的变化而不断更新。
 
 ```swift
 // 当识别的项目发生变化时发送通知
@@ -545,6 +578,4 @@ func updateViaAsyncStream() async {
 
 ## 总结
 
-iOS SDK 为我们提供了使用 AVFoundation 和 Vision 框架创建计算机视觉工作流的选项。 也许我们正在创建一个使用实时视频源扫描文本或机器可读代码的应用程序，可以尝试使用 VisionKit 中的 `DataScannerViewController`，我们可以使用它们来提供与您的应用程序风格和需求相匹配的自定义体验。
-
-最后，欢迎了解另一个 Session “[Add Live Text interaction to your app](https://developer.apple.com/videos/play/wwdc2022/10026/)”，我们可以在其中了解 VisionKit 针对静态图像的实时文本功能。
+iOS SDK 为我们提供了使用 AVFoundation 和 Vision 框架创建计算机视觉工作流的选项。也许我们正在创建一个使用实时视频源扫描文本或条码的应用程序，可以尝试使用 VisionKit 中的 `DataScannerViewController`，用它们来实现与系统应用程序风格相匹配的自定义扫描体验。
