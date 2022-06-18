@@ -20,9 +20,11 @@ session_ids: [10025]
 
 > 在这里我们提到另一个概念————端智能（On-Device Machine Learning），是指将机器学习技术的应用和部署在端侧。这里所说的“端侧”，是相对于云端服务而言的，“端侧”可以是手机、平板电脑、物联网设备等。
 > 端智能相比于云智能具备独特优势：
+>
 > - 隐私安全，数据产生、消费都在端侧完成，避免了传输引起的隐私泄露风险；
 > - 实时高效，端侧处理可省去数据的网络传输时间；
 > - 节省资源，端侧有更大的算力资源池，对于非大规模和高强度的持续性计算，放在端侧完成更节省服务端资源和成本。
+>
 > Apple 提供的“数据识别器”能力是符合“端智能“的定义的，这是与其他应用程序的主要区别。
 
 作为开发者，我们应如果构建自己的数据识别器？iOS SDK 为我们提供了多种解决方案，具体取决于我们的需求。我们将专注于如何实现这一功能。
@@ -283,7 +285,7 @@ extension ViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
 对于应用程序来说，数据扫描与识别可能只是其业务功能的一小部分，但需要开发者使用大量代码来实现该功能。使用 `DataScannerViewController`，让它为我们处理常见的数据扫描与识别任务，我们可以将精力集中在程序的其它地方。接下来，我们将尝试其添加到我们的应用程序中。
 
 > 这里需要注意的是 Apple 只提供 `DataScannerViewController` 的 Swift 版本，使用 Objective-C 的开发者需要自行完成桥接工作。
-> `DataScannerViewController` 现在只支持 UIKit。对于 SwiftUI，必须采用 `UIViewControllerRepresentable `协议才能使用该类。
+> `DataScannerViewController` 现在只支持 UIKit。对于 SwiftUI，必须采用 `UIViewControllerRepresentable` 协议才能使用该类。
 
 ### 使用 VisionKit 方案
 
