@@ -37,19 +37,12 @@ VisionKit 是 Apple 在 iOS 13 中引入的框架，为 iOS 提供了图像和�
 - 有关静止的图像或暂停的视频帧与实时文本交互的更多信息，请观看来自 WWDC22 的另一个 Session “[Add Live Text interaction to your app](https://developer.apple.com/videos/play/wwdc2022/10026/)”。
 
 - 其他相关资料可以参考：
-
-    - [Vision Documentation](https://developer.apple.com/documentation/vision);
-
-    - [visionkit Documentation](https://developer.apple.com/documentation/visionkit);
-
+    - [Vision Documentation](https://developer.apple.com/documentation/vision)；
+    - [visionkit Documentation](https://developer.apple.com/documentation/visionkit)；
     - WWDC 2019 讲座 “[Understanding Images in Vision Framework](https://developer.apple.com/videos/play/wwdc2019/222/)”，了解 Vision 在图像分类、图像显著性、图像确定及面部捕捉质量评分等方面的改进；
-
     - WWDC 2019 讲座 “[Text Recognition in Vision Framework](https://developer.apple.com/videos/play/wwdc2019/234/)”，了解如何在应用程序中利用内置的机器学习技术，快速、准确的处理字符、语言的识别，以及它们之间的差异；
-
     - WWDC 2020 Session “[Explore Computer Vision APIs](https://developer.apple.com/videos/play/wwdc2020/10673/)”，了解如何将结合 Core Image、Vision 和 Core ML 的强大功能的计算机视觉智能引入我们的应用程序；
-
     - WWDC 2021 Session “[Extract document data using Vision](https://developer.apple.com/videos/play/wwdc2021/10041/)”，了解 Vision 如何提供专业的图像识别和分析，实现从文档中提取信息、识别多语言文本及条码；
-
     - 老司机技术周报 WWDC21 内参 “[使用 Vision 提取文档里的数据](https://xiaozhuanlan.com/topic/6204139578)”。
     
 我们将从历史方案开始。
