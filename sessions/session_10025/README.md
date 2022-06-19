@@ -513,11 +513,14 @@ func dataScanner(_ dataScanner: DataScannerViewController, didRemove removedItem
 
 ```swift
 // 拍摄静态照片并保存到相册
-if let image = try? await dataScanner.capturePhoto()
-UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
+if let image = try? await dataScanner.capturePhoto() {
+    UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
+}
 ```
 
 如果我们不创建自定义突出显示，就可能不需要上一部分的三个委托方法。我们可以使用 `RecognizedItem` 属性。它是一个 `AsyncStream`，会随着场景的变化而不断更新。
+
+> 有关 `AsyncSequence` 的相关内容，可以参考 WWDC 21 “[Meet AsyncSequence](https://developer.apple.com/videos/play/wwdc2021/10058/)”。
 
 ```swift
 // 当识别的项目发生变化时发送通知
