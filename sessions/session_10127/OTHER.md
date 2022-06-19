@@ -12,4 +12,4 @@
 
 ## 公众号/小专栏图文头图
 
-<img src="./images/banner.png" style="zoom:50%;" />
+![](./images/banner.png)

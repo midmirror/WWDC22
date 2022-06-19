@@ -24,9 +24,9 @@ comment_sender = ENV['COMMENT_SENDER']
 message = ""
 comment_from_pr_author = pull_request_author == comment_sender
 if comment_from_pr_author
-  message = "PR 有新的审核留言，请尽快查阅。 #{pull_request_url}"
-else
   message = "PR 作者已回复留言，请尽快查阅。 #{pull_request_url}"
+else
+  message = "PR 有新的审核留言，请尽快查阅。 #{pull_request_url}"
 end
 
 begin

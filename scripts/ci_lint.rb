@@ -47,7 +47,8 @@ lint_results.first(1000).each do |lint_result|
     rule_information = error['ruleInformation']
     message = ""
     message << error['description']
-    message << " `#{text}`\n" if text
+    message << " `#{text}`" if text
+    message << "\n\n"
     message << "For more details please visit [#{error['type']}](#{rule_information})." if rule_information
     fail(message, file: file, line: line)
   end
