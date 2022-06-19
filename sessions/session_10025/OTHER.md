@@ -10,4 +10,4 @@ Layer（杨杰），就职于抖音 iOS 即时通讯团队，经常被可爱的�
 
 ## 公众号/小专栏图文头图
 
-<img src="./images/banner.png" style="zoom:50%;" />
+![](./images/banner.png)
